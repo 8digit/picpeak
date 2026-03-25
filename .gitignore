@@ -114,6 +114,9 @@ playwright-local-results/
 e2e-test.log
 scripts/e2e-local.sh
 
+# Working/planning documents
+picpeak-claude-code-prompt.md
+
 # Local SQLite files in backend
 backend/*.sqlite*
 backend/*.db
