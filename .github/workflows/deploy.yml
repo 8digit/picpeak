@@ -1,0 +1,35 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd /opt/picpeak
+
+            # Pull latest code (for compose/config changes)
+            git pull origin main
+
+            # Pull latest pre-built images from GHCR
+            docker compose -f docker-compose.production.yml pull
+
+            # Restart with zero downtime (recreate only changed services)
+            docker compose -f docker-compose.production.yml up -d --remove-orphans
+
+            # Wait for health checks
+            sleep 10
+
+            # Verify deployment
+            curl -sf http://localhost:3001/health || exit 1
+            echo "Deployment successful"

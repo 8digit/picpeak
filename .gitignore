@@ -100,6 +100,9 @@ backup/
 # Local artifacts from browser tooling
 .playwright-mcp/
 
+# Working/planning documents
+picpeak-claude-code-prompt.md
+
 # Local SQLite files in backend
 backend/*.sqlite*
 backend/*.db
