@@ -16,8 +16,14 @@ function generateConfigHash(config) {
 // Initialize transporter from database config
 async function initializeTransporter(forceReinit = false) {
   try {
+    // Skip SMTP initialization when using webhook mode
+    if (process.env.EMAIL_WEBHOOK_URL) {
+      logger.info('Email webhook mode active, skipping SMTP transporter');
+      return null;
+    }
+
     const config = await db('email_configs').first();
-    
+
     if (!config) {
       logger.warn('No email configuration found');
       return null;
@@ -50,10 +56,10 @@ async function initializeTransporter(forceReinit = false) {
     // Verify configuration
     await transporter.verify();
     logger.info('Email transporter initialized successfully');
-    
+
     // Update the config hash
     lastConfigHash = currentConfigHash;
-    
+
     return transporter;
   } catch (error) {
     logger.error('Failed to initialize email transporter:', error);
@@ -342,20 +348,31 @@ async function processTemplate(template, variables, language = 'en') {
   return { subject, htmlBody: styledHtmlBody, textBody };
 }
 
+// Send email via webhook (n8n) instead of SMTP
+async function sendViaWebhook(emailPayload) {
+  const webhookUrl = process.env.EMAIL_WEBHOOK_URL;
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(emailPayload)
+  });
+  if (!response.ok) {
+    throw new Error(`Webhook failed: ${response.status} ${response.statusText}`);
+  }
+  const result = await response.json().catch(() => ({}));
+  return result;
+}
+
 // Send email using template
 async function sendTemplateEmail(to, templateKey, variables) {
   try {
-    // Always check for configuration changes before sending
-    transporter = await initializeTransporter();
-    if (!transporter) {
-      throw new Error('Email service not configured');
-    }
+    const useWebhook = !!process.env.EMAIL_WEBHOOK_URL;
 
     // Get email template
     const template = await db('email_templates')
       .where('template_key', templateKey)
       .first();
-    
+
     if (!template) {
       throw new Error(`Email template '${templateKey}' not found`);
     }
@@ -368,17 +385,37 @@ async function sendTemplateEmail(to, templateKey, variables) {
 
     // Determine recipient language (pass eventId if available in variables)
     const language = await getRecipientLanguage(to, variables.eventId || null);
-    
+
     // Process template with variables
     const { subject, htmlBody, textBody } = await processTemplate(template, variables, language);
 
-    // Send email
+    const from = `${config.from_name} <${config.from_email}>`;
+
+    if (useWebhook) {
+      // Send via n8n webhook
+      const result = await sendViaWebhook({
+        from,
+        to,
+        subject,
+        html: htmlBody,
+        text: textBody || htmlBody.replace(/<[^>]*>/g, '')
+      });
+      logger.info(`Email sent via webhook to ${to} (${language})`);
+      return { success: true, messageId: result.messageId || 'webhook', language };
+    }
+
+    // Fallback: send via SMTP
+    transporter = await initializeTransporter();
+    if (!transporter) {
+      throw new Error('Email service not configured');
+    }
+
     const info = await transporter.sendMail({
-      from: `${config.from_name} <${config.from_email}>`,
-      to: to,
-      subject: subject,
+      from,
+      to,
+      subject,
       html: htmlBody,
-      text: textBody || htmlBody.replace(/<[^>]*>/g, '') // Strip HTML if no text version
+      text: textBody || htmlBody.replace(/<[^>]*>/g, '')
     });
 
     logger.info(`Email sent successfully: ${info.messageId} (${language})`);
@@ -394,8 +431,10 @@ async function processEmailQueue() {
   logger.info('Email queue processor: Checking for pending emails...');
   
   try {
-    // Try to initialize transporter if it's null (in case it failed at startup)
-    if (!transporter) {
+    const useWebhook = !!process.env.EMAIL_WEBHOOK_URL;
+
+    // Try to initialize transporter if it's null and not in webhook mode
+    if (!useWebhook && !transporter) {
       logger.info('Transporter not initialized, attempting to initialize...');
       transporter = await initializeTransporter();
       if (!transporter) {
@@ -498,6 +537,16 @@ async function queueEmail(eventId, recipientEmail, emailType, emailData) {
 // Test email connection
 async function testEmailConnection() {
   try {
+    // Webhook mode: test the webhook URL
+    if (process.env.EMAIL_WEBHOOK_URL) {
+      const response = await fetch(process.env.EMAIL_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: true })
+      });
+      return response.ok;
+    }
+
     if (!transporter) {
       await initializeTransporter();
     }
