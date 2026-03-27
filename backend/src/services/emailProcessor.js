@@ -7,6 +7,16 @@ const { getFrontendBaseUrl } = require('../utils/frontendUrl');
 let transporter = null;
 let lastConfigHash = null;
 
+// Darken a hex color by a given factor (for hover states)
+function darkenColor(hex, amount = 0.2) {
+  hex = hex.replace('#', '');
+  const num = parseInt(hex, 16);
+  const r = Math.max(0, Math.floor((num >> 16) * (1 - amount)));
+  const g = Math.max(0, Math.floor(((num >> 8) & 0x00FF) * (1 - amount)));
+  const b = Math.max(0, Math.floor((num & 0x0000FF) * (1 - amount)));
+  return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+}
+
 // Generate hash from config for change detection
 function generateConfigHash(config) {
   const crypto = require('crypto');
@@ -169,37 +179,42 @@ async function processTemplate(template, variables, language = 'en') {
     processedVariables.welcome_message = formatWelcomeMessage(processedVariables.welcome_message);
   }
 
-  // Get branding settings for logo
+  // Get branding settings for logo and theme colors
   let logoUrl = '';
   let companyName = 'PicPeak';
+  let primaryColor = '#5C8762';
   try {
     const brandingSettings = await db('app_settings')
-      .whereIn('setting_key', ['branding_logo_url', 'branding_company_name'])
+      .whereIn('setting_key', ['branding_logo_url', 'branding_company_name', 'theme_config'])
       .select('setting_key', 'setting_value');
-    
+
     brandingSettings.forEach(setting => {
-      if (setting.setting_key === 'branding_logo_url' && setting.setting_value) {
+      const val = setting.setting_value;
+      if (setting.setting_key === 'branding_logo_url' && val) {
+        try { logoUrl = JSON.parse(val); } catch (e) { logoUrl = val; }
+      } else if (setting.setting_key === 'branding_company_name' && val) {
+        try { companyName = JSON.parse(val); } catch (e) { companyName = val; }
+      } else if (setting.setting_key === 'theme_config' && val) {
         try {
-          logoUrl = JSON.parse(setting.setting_value);
-        } catch (e) {
-          logoUrl = setting.setting_value;
-        }
-      } else if (setting.setting_key === 'branding_company_name' && setting.setting_value) {
-        try {
-          companyName = JSON.parse(setting.setting_value);
-        } catch (e) {
-          companyName = setting.setting_value;
-        }
+          let themeConfig = typeof val === 'string' ? JSON.parse(val) : val;
+          if (typeof themeConfig === 'string') themeConfig = JSON.parse(themeConfig);
+          if (themeConfig && themeConfig.primaryColor) primaryColor = themeConfig.primaryColor;
+        } catch (_) {}
       }
     });
   } catch (error) {
     logger.error('Error fetching branding settings:', error);
   }
+  const primaryHoverColor = darkenColor(primaryColor);
 
-  // If no custom logo, use default PicPeak logo
-  const apiUrl = process.env.API_URL || 'http://localhost:3001';
+  // Build public-facing URLs for email content
   const frontendUrl = (await getFrontendBaseUrl()) || 'http://localhost:3005';
-  const logoFullUrl = logoUrl ? `${apiUrl}${logoUrl}` : `${frontendUrl}/picpeak-logo-transparent.png`;
+  const logoFullUrl = logoUrl ? `${frontendUrl}${logoUrl}` : `${frontendUrl}/picpeak-logo-transparent.png`;
+
+  // Fix gallery_link to include full domain
+  if (processedVariables.gallery_link && !processedVariables.gallery_link.startsWith('http')) {
+    processedVariables.gallery_link = `${frontendUrl}${processedVariables.gallery_link}`;
+  }
 
   // Compile templates with Handlebars
   const subjectTemplate = Handlebars.compile(subject);
@@ -240,7 +255,7 @@ async function processTemplate(template, variables, language = 'en') {
       overflow: hidden;
     }
     .email-header {
-      background-color: #5C8762;
+      background-color: ${primaryColor};
       padding: 30px;
       text-align: center;
     }
@@ -253,7 +268,7 @@ async function processTemplate(template, variables, language = 'en') {
       padding: 40px 30px;
     }
     .email-content h2 {
-      color: #5C8762;
+      color: ${primaryColor};
       margin-top: 0;
       margin-bottom: 20px;
       font-size: 24px;
@@ -274,7 +289,7 @@ async function processTemplate(template, variables, language = 'en') {
     .button {
       display: inline-block;
       padding: 12px 30px;
-      background-color: #5C8762;
+      background-color: ${primaryColor};
       color: white !important;
       text-decoration: none;
       border-radius: 5px;
@@ -282,7 +297,7 @@ async function processTemplate(template, variables, language = 'en') {
       margin: 20px 0;
     }
     .button:hover {
-      background-color: #4a6f4f;
+      background-color: ${primaryHoverColor};
     }
     .email-footer {
       background-color: #f9f9f9;
@@ -302,11 +317,11 @@ async function processTemplate(template, variables, language = 'en') {
       margin: 5px 0;
     }
     a {
-      color: #5C8762;
+      color: ${primaryColor};
       text-decoration: underline;
     }
     a:hover {
-      color: #4a6f4f;
+      color: ${primaryHoverColor};
     }
     strong {
       color: #333;
