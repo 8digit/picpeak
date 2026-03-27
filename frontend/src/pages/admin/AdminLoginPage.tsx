@@ -9,6 +9,7 @@ import { Button, Input, Card, ReCaptcha } from '../../components/common';
 import { useAdminAuth } from '../../contexts';
 import { authService } from '../../services/auth.service';
 import { api } from '../../config/api';
+import { buildResourceUrl } from '../../utils/url';
 
 export const AdminLoginPage: React.FC = () => {
   const { t } = useTranslation();
@@ -126,17 +127,20 @@ export const AdminLoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div 
-            className="w-[200px] h-[150px] mx-auto mb-6 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: '#eee6d2' }}
-          >
-            <img 
-              src="/picpeak-logo-transparent.png" 
-              alt="PicPeak"
-              className="w-[180px] h-[130px] object-contain"
+          {settingsData?.branding_logo_url ? (
+            <img
+              src={buildResourceUrl(settingsData.branding_logo_url)}
+              alt={settingsData?.branding_company_name || 'Admin'}
+              className="max-w-[200px] max-h-[150px] mx-auto mb-6 object-contain"
             />
-          </div>
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text, #171717)' }}>{t('adminLogin.title')}</h1>
+          ) : (
+            <div className="w-[200px] h-[150px] mx-auto mb-6 rounded-2xl flex items-center justify-center bg-neutral-100 dark:bg-neutral-800">
+              <Lock className="w-12 h-12 text-neutral-400" />
+            </div>
+          )}
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text, #171717)' }}>
+            {settingsData?.branding_company_name || t('adminLogin.title')}
+          </h1>
           <p className="mt-2" style={{ color: 'var(--color-text, #171717)', opacity: 0.7 }}>{t('adminLogin.subtitle')}</p>
         </div>
 
@@ -241,9 +245,6 @@ export const AdminLoginPage: React.FC = () => {
             >
               {settingsData?.branding_support_email || 'support@example.com'}
             </a>
-          </p>
-          <p className="text-xs mt-2" style={{ color: 'var(--color-text, #171717)', opacity: 0.5 }}>
-            {t('adminLogin.poweredBy')}
           </p>
         </div>
 
