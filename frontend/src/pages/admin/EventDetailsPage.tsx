@@ -70,7 +70,7 @@ import { ThemeConfig, GALLERY_THEME_PRESETS } from '../../types/theme.types';
 const resolveShareLink = (link: string): string => {
   if (!link) return '#';
   if (link.startsWith('http')) return link;
-  if (link.startsWith('/')) return link;
+  if (link.startsWith('/')) return `${window.location.origin}${link}`;
   return `/gallery/${link}`;
 };
 
@@ -622,13 +622,16 @@ export const EventDetailsPage: React.FC = () => {
         return;
       }
 
+      // Build full URL for copying
+      const fullShareLink = event.share_link.startsWith('http') ? event.share_link : `${window.location.origin}${event.share_link}`;
+
       // Try modern clipboard API first
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(event.share_link);
+        await navigator.clipboard.writeText(fullShareLink);
       } else {
         // Fallback for non-HTTPS contexts or older browsers
         const textArea = document.createElement('textarea');
-        textArea.value = event.share_link;
+        textArea.value = fullShareLink;
         textArea.style.position = 'fixed';
         textArea.style.left = '-999999px';
         textArea.style.top = '-999999px';
@@ -1501,7 +1504,7 @@ export const EventDetailsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={event.share_link}
+                value={event.share_link?.startsWith('http') ? event.share_link : `${window.location.origin}${event.share_link}`}
                 readOnly
                 className="flex-1 px-3 py-2 bg-neutral-50 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 rounded-lg text-sm"
               />

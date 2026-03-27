@@ -29,7 +29,7 @@ import { useTranslation } from 'react-i18next';
 const resolveShareLink = (link: string): string => {
   if (!link) return '#';
   if (link.startsWith('http')) return link;
-  if (link.startsWith('/')) return link;
+  if (link.startsWith('/')) return `${window.location.origin}${link}`;
   return `/gallery/${link}`;
 };
 
