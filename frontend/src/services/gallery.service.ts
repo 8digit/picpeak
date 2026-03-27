@@ -2,16 +2,22 @@ import { api } from '../config/api';
 import type { GalleryInfo, GalleryData, GalleryStats, ResolvedGalleryIdentifier } from '../types';
 import { normalizeRequirePassword } from '../utils/accessControl';
 
+// Read admin preview token from URL query string (set when admin clicks "Preview Gallery")
+function getPreviewParam(): Record<string, string> {
+  const preview = new URLSearchParams(window.location.search).get('preview');
+  return preview ? { preview } : {};
+}
+
 export const galleryService = {
   // Verify share token
   async verifyToken(slug: string, token: string): Promise<{ valid: boolean }> {
-    const response = await api.get<{ valid: boolean }>(`/gallery/${slug}/verify-token/${token}`);
+    const response = await api.get<{ valid: boolean }>(`/gallery/${slug}/verify-token/${token}`, { params: getPreviewParam() });
     return response.data;
   },
 
   // Get basic gallery info (no auth required)
   async getGalleryInfo(slug: string, token?: string): Promise<GalleryInfo> {
-    const params = token ? { token } : {};
+    const params = { ...(token ? { token } : {}), ...getPreviewParam() };
     const response = await api.get<GalleryInfo>(`/gallery/${slug}/info`, { params });
     const data = response.data;
     return {
@@ -33,6 +39,7 @@ export const galleryService = {
         params.guest_id = guestId;
       }
     }
+    Object.assign(params, getPreviewParam());
     const response = await api.get<GalleryData>(`/gallery/${slug}/photos`, { params });
     const data = response.data;
     const normalizedEvent = data?.event
@@ -121,7 +128,7 @@ export const galleryService = {
   },
 
   async resolveIdentifier(identifier: string): Promise<ResolvedGalleryIdentifier> {
-    const response = await api.get<ResolvedGalleryIdentifier>(`/gallery/resolve/${identifier}`);
+    const response = await api.get<ResolvedGalleryIdentifier>(`/gallery/resolve/${identifier}`, { params: getPreviewParam() });
     return response.data;
   },
 };

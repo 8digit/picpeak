@@ -117,7 +117,7 @@ const ACTIVE_EVENT_FILTER = {
   is_draft: formatBoolean(false)
 };
 
-const resolveShareIdentifier = async (identifier) => {
+const resolveShareIdentifier = async (identifier, { includeDrafts = false } = {}) => {
   if (!identifier) {
     return null;
   }
@@ -126,6 +126,10 @@ const resolveShareIdentifier = async (identifier) => {
   if (!trimmed) {
     return null;
   }
+
+  const filter = includeDrafts
+    ? { is_active: formatBoolean(true), is_archived: formatBoolean(false) }
+    : ACTIVE_EVENT_FILTER;
 
   const baseQuery = db('events')
     .select(
@@ -141,7 +145,7 @@ const resolveShareIdentifier = async (identifier) => {
       'is_active',
       'is_archived'
     )
-    .where(ACTIVE_EVENT_FILTER);
+    .where(filter);
 
   let event = await baseQuery.clone().where({ slug: trimmed }).first();
   if (event) {

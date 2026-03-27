@@ -161,6 +161,12 @@ export const eventsService = {
     return response.data;
   },
 
+  // Get a short-lived preview token for viewing draft galleries
+  async getPreviewToken(eventId: number): Promise<{ previewToken: string }> {
+    const response = await api.get(`/admin/events/${eventId}/preview-token`);
+    return response.data;
+  },
+
   // Resend creation email
   async resendCreationEmail(eventId: number): Promise<{ success: boolean; message: string }> {
     const response = await api.post(`/admin/events/${eventId}/resend-email`);

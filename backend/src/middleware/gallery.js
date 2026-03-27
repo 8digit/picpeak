@@ -4,12 +4,33 @@ const { formatBoolean } = require('../utils/dbCompat');
 const { getGalleryTokenFromRequest } = require('../utils/tokenUtils');
 const logger = require('../utils/logger');
 
+// Check if request has a valid admin preview token (query param ?preview=<jwt>)
+function isAdminPreview(req) {
+  const previewToken = req.query?.preview;
+  if (!previewToken) return false;
+  try {
+    const decoded = jwt.verify(previewToken, process.env.JWT_SECRET, { issuer: 'picpeak-auth' });
+    const payload = decoded.payload || decoded;
+    return payload.role === 'admin' || payload.role === 'superadmin';
+  } catch {
+    return false;
+  }
+}
+
 // Middleware to verify gallery access
 async function verifyGalleryAccess(req, res, next) {
   try {
     const requestedSlug = req.params.slug || req.requestedSlug;
     const token = getGalleryTokenFromRequest(req, requestedSlug);
+    const adminPreview = isAdminPreview(req);
     let event;
+
+    // Build base query conditions — admin preview skips the draft filter
+    const baseWhere = {
+      is_active: formatBoolean(true),
+      is_archived: formatBoolean(false),
+      ...(adminPreview ? {} : { is_draft: formatBoolean(false) })
+    };
 
     if (!token) {
       if (!requestedSlug) {
@@ -18,12 +39,7 @@ async function verifyGalleryAccess(req, res, next) {
 
       event = await withRetry(async () => {
         return await db('events')
-          .where({ 
-            slug: requestedSlug,
-            is_active: formatBoolean(true),
-            is_archived: formatBoolean(false),
-            is_draft: formatBoolean(false)
-          })
+          .where({ slug: requestedSlug, ...baseWhere })
           .select('*')
           .first();
       });
@@ -69,12 +85,7 @@ async function verifyGalleryAccess(req, res, next) {
       // Verify by slug and ensure it matches the token's event
       event = await withRetry(async () => {
         return await db('events')
-          .where({ 
-            slug: requestedSlug,
-            is_active: formatBoolean(true),
-            is_archived: formatBoolean(false),
-            is_draft: formatBoolean(false)
-          })
+          .where({ slug: requestedSlug, ...baseWhere })
           .select('*')
           .first();
       });
@@ -87,12 +98,7 @@ async function verifyGalleryAccess(req, res, next) {
       // Fallback to using eventId from token
       event = await withRetry(async () => {
         return await db('events')
-          .where({ 
-            id: decoded.eventId, 
-            is_active: formatBoolean(true),
-            is_archived: formatBoolean(false),
-            is_draft: formatBoolean(false)
-          })
+          .where({ id: decoded.eventId, ...baseWhere })
           .select('*')
           .first();
       });
@@ -124,5 +130,6 @@ async function verifyGalleryAccess(req, res, next) {
 }
 
 module.exports = {
-  verifyGalleryAccess
+  verifyGalleryAccess,
+  isAdminPreview
 };

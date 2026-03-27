@@ -6,7 +6,7 @@ const path = require('path');
 const router = express.Router();
 const watermarkService = require('../services/watermarkService');
 const watermarkGeneratorService = require('../services/watermarkGeneratorService');
-const { verifyGalleryAccess } = require('../middleware/gallery');
+const { verifyGalleryAccess, isAdminPreview } = require('../middleware/gallery');
 const secureImageService = require('../services/secureImageService');
 const logger = require('../utils/logger');
 const { resolvePhotoFilePath } = require('../services/photoResolver');
@@ -38,7 +38,8 @@ async function checkSlugRedirect(slug) {
 // Resolve gallery identifier (slug or token) to canonical data
 router.get('/resolve/:identifier', handleAsync(async (req, res) => {
   const { identifier } = req.params;
-  let result = await resolveShareIdentifier(identifier);
+  const adminPreview = isAdminPreview(req);
+  let result = await resolveShareIdentifier(identifier, { includeDrafts: adminPreview });
 
   // If not found, check for redirect
   if (!result) {
@@ -73,8 +74,15 @@ router.get('/resolve/:identifier', handleAsync(async (req, res) => {
 router.get('/:slug/verify-token/:token', handleAsync(async (req, res) => {
   const { slug, token } = req.params;
 
+  const adminPreview = isAdminPreview(req);
+  const where = {
+    slug,
+    is_active: formatBoolean(true),
+    is_archived: formatBoolean(false),
+    ...(adminPreview ? {} : { is_draft: formatBoolean(false) })
+  };
   const event = await db('events')
-    .where({ slug, is_active: formatBoolean(true), is_archived: formatBoolean(false), is_draft: formatBoolean(false) })
+    .where(where)
     .select('id', 'share_link', 'share_token')
     .first();
 
@@ -145,9 +153,9 @@ router.get('/:slug/info', async (req, res) => {
       return res.status(404).json({ error: 'Gallery has been archived and is no longer available' });
     }
 
-    // Check if event is still a draft
+    // Check if event is still a draft (admin preview bypasses this)
     const isDraft = event.is_draft === true || event.is_draft === 1 || event.is_draft === '1';
-    if (isDraft) {
+    if (isDraft && !isAdminPreview(req)) {
       return res.status(404).json({ error: 'Gallery is not yet published' });
     }
     

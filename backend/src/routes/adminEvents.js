@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { db, logActivity } = require('../database/db');
 const { formatBoolean } = require('../utils/dbCompat');
@@ -1259,6 +1260,29 @@ router.post('/:id/publish', adminAuth, requirePermission('events.edit'), async (
   } catch (error) {
     console.error('Error publishing event:', error);
     res.status(500).json({ error: 'Failed to publish event' });
+  }
+});
+
+// Generate a short-lived preview token for viewing draft galleries
+router.get('/:id/preview-token', adminAuth, requirePermission('events.edit'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await db('events').where('id', id).first();
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Generate a 1-hour admin preview token
+    const previewToken = jwt.sign(
+      { role: 'admin', eventId: event.id, purpose: 'preview' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h', issuer: 'picpeak-auth' }
+    );
+
+    res.json({ previewToken });
+  } catch (error) {
+    console.error('Error generating preview token:', error);
+    res.status(500).json({ error: 'Failed to generate preview token' });
   }
 });
 

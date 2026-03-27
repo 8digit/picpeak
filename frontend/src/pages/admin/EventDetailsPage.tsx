@@ -155,6 +155,7 @@ export const EventDetailsPage: React.FC = () => {
     upload_category_id: number | null;
     hero_photo_id: number | null;
     customer_name: string;
+    customer_email: string;
     source_mode: 'managed' | 'reference';
     external_path: string;
     require_password: boolean;
@@ -185,6 +186,7 @@ export const EventDetailsPage: React.FC = () => {
     upload_category_id: null,
     hero_photo_id: null,
     customer_name: '',
+    customer_email: '',
     source_mode: 'managed',
     external_path: '',
     require_password: true,
@@ -413,6 +415,7 @@ export const EventDetailsPage: React.FC = () => {
       upload_category_id: event.upload_category_id || null,
       hero_photo_id: event.hero_photo_id || null,
       customer_name: event.customer_name || '',
+      customer_email: event.customer_email || '',
       source_mode: event.source_mode === 'reference' ? 'reference' : 'managed',
       external_path: event.external_path || '',
       require_password: normalizeRequirePassword(event.require_password),
@@ -589,6 +592,9 @@ export const EventDetailsPage: React.FC = () => {
     if (editForm.customer_name !== undefined && editForm.customer_name !== null) {
       updateData.customer_name = editForm.customer_name;
     }
+    if (editForm.customer_email !== undefined && editForm.customer_email !== null) {
+      updateData.customer_email = editForm.customer_email;
+    }
 
     if (editForm.new_password) {
       updateData.password = editForm.new_password;
@@ -759,15 +765,34 @@ export const EventDetailsPage: React.FC = () => {
               </>
             )}
             {event.share_link && !isEditing && (
-              <a
-                href={resolveShareLink(event.share_link)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                {t('events.viewGallery')}
-              </a>
+              event.is_draft ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      const { previewToken } = await eventsService.getPreviewToken(event.id);
+                      const url = new URL(resolveShareLink(event.share_link), window.location.origin);
+                      url.searchParams.set('preview', previewToken);
+                      window.open(url.toString(), '_blank');
+                    } catch {
+                      alert(t('events.previewError', 'Failed to generate preview link'));
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-yellow-700 hover:text-yellow-800 border border-yellow-500 rounded-lg hover:bg-yellow-50 dark:text-yellow-400 dark:hover:text-yellow-300 dark:border-yellow-600 dark:hover:bg-yellow-900/30 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  {t('events.previewGallery', 'Preview Gallery')}
+                </button>
+              ) : (
+                <a
+                  href={resolveShareLink(event.share_link)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  {t('events.viewGallery')}
+                </a>
+              )
             )}
           </div>
         </div>
@@ -912,7 +937,19 @@ export const EventDetailsPage: React.FC = () => {
                     placeholder={t('events.hostNamePlaceholder')}
                   />
                 </div>
-                
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                    {t('events.hostEmail')}
+                  </label>
+                  <Input
+                    type="email"
+                    value={editForm.customer_email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, customer_email: e.target.value }))}
+                    placeholder={t('events.hostEmailPlaceholder', 'client@example.com')}
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                     {t('events.expirationDate')}
