@@ -1,13 +1,18 @@
 name: Deploy to Production
 
 on:
-  push:
+  # Only deploy after Docker images are built (not on direct push)
+  workflow_run:
+    workflows: ["Build and Push Docker Images"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Only deploy if the build succeeded (skip if build failed)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0

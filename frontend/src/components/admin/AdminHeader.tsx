@@ -32,11 +32,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // Fetch branding settings for admin header customization
-  const { data: brandingData } = useQuery({
+  const { data: rawBrandingData } = useQuery({
     queryKey: ['admin-settings', 'branding'],
     queryFn: () => settingsService.getSettingsByType('branding'),
     staleTime: 5 * 60 * 1000,
   });
+  const brandingData = rawBrandingData ? settingsService.formatBrandingSettings(rawBrandingData) : null;
   const adminLogo = brandingData?.logo_url ? buildResourceUrl(brandingData.logo_url) : '/picpeak-kamera-transparent.png';
   const adminName = brandingData?.company_name || 'PicPeak';
   const adminDisplayMode = brandingData?.logo_display_mode || 'logo_and_text';
