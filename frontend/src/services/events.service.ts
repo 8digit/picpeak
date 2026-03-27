@@ -155,6 +155,12 @@ export const eventsService = {
     return response.data;
   },
 
+  // Publish a draft event (makes it active + sends creation email)
+  async publishEvent(eventId: number): Promise<{ success: boolean; message: string }> {
+    const response = await api.post(`/admin/events/${eventId}/publish`);
+    return response.data;
+  },
+
   // Resend creation email
   async resendCreationEmail(eventId: number): Promise<{ success: boolean; message: string }> {
     const response = await api.post(`/admin/events/${eventId}/resend-email`);

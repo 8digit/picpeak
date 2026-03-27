@@ -15,6 +15,7 @@ export interface Event {
   expires_at: string | null;
   is_active: boolean;
   is_archived: boolean;
+  is_draft?: boolean;
   archive_path?: string;
   archived_at?: string;
   require_password?: boolean;

@@ -12,6 +12,8 @@ import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { PasswordChangeModal } from './PasswordChangeModal';
 import { LanguageSelector } from '../common';
 import { notificationsService } from '../../services/notifications.service';
+import { settingsService } from '../../services/settings.service';
+import { buildResourceUrl } from '../../utils/url';
 import { toast } from 'react-toastify';
 
 interface AdminHeaderProps {
@@ -28,6 +30,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  // Fetch branding settings for admin header customization
+  const { data: brandingData } = useQuery({
+    queryKey: ['admin-settings', 'branding'],
+    queryFn: () => settingsService.getSettingsByType('branding'),
+    staleTime: 5 * 60 * 1000,
+  });
+  const adminLogo = brandingData?.logo_url ? buildResourceUrl(brandingData.logo_url) : '/picpeak-kamera-transparent.png';
+  const adminName = brandingData?.company_name || 'PicPeak';
+  const adminDisplayMode = brandingData?.logo_display_mode || 'logo_and_text';
   const queryClient = useQueryClient();
   
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -82,10 +94,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               <Menu className="w-6 h-6" />
             </button>
 
-            {/* PicPeak logo - sticky to the left on all sizes */}
+            {/* Admin branding - customizable via Branding settings */}
             <div className="flex items-center gap-2">
-              <img src="/picpeak-kamera-transparent.png" alt="PicPeak" className="h-8 w-auto object-contain" />
-              <span className="text-xl sm:text-2xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>PicPeak</span>
+              {adminDisplayMode !== 'text_only' && (
+                <img src={adminLogo} alt={adminName} className="h-8 w-auto object-contain" />
+              )}
+              {adminDisplayMode !== 'logo_only' && (
+                <span className="text-xl sm:text-2xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, color: '#145346' }}>{adminName}</span>
+              )}
             </div>
 
             {/* Date display - hidden on smaller screens */}

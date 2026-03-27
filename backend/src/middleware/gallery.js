@@ -21,7 +21,8 @@ async function verifyGalleryAccess(req, res, next) {
           .where({ 
             slug: requestedSlug,
             is_active: formatBoolean(true),
-            is_archived: formatBoolean(false)
+            is_archived: formatBoolean(false),
+            is_draft: formatBoolean(false)
           })
           .select('*')
           .first();
@@ -71,7 +72,8 @@ async function verifyGalleryAccess(req, res, next) {
           .where({ 
             slug: requestedSlug,
             is_active: formatBoolean(true),
-            is_archived: formatBoolean(false)
+            is_archived: formatBoolean(false),
+            is_draft: formatBoolean(false)
           })
           .select('*')
           .first();
@@ -88,7 +90,8 @@ async function verifyGalleryAccess(req, res, next) {
           .where({ 
             id: decoded.eventId, 
             is_active: formatBoolean(true),
-            is_archived: formatBoolean(false)
+            is_archived: formatBoolean(false),
+            is_draft: formatBoolean(false)
           })
           .select('*')
           .first();

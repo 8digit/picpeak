@@ -110,6 +110,40 @@ const getEventFieldRequirements = async () => {
   }
 };
 
+// Helper to get branding defaults for new events
+const getBrandingDefaults = async () => {
+  try {
+    const settings = await db('app_settings')
+      .whereIn('setting_key', [
+        'branding_logo_display_hero',
+        'branding_logo_size',
+        'branding_logo_position'
+      ])
+      .select('setting_key', 'setting_value');
+
+    const defaults = {
+      logo_display_hero: true,
+      logo_size: 'medium',
+      logo_position: 'top'
+    };
+
+    settings.forEach(s => {
+      let value = s.setting_value;
+      if (typeof value === 'string') {
+        try { value = JSON.parse(value); } catch (_) {}
+      }
+      if (s.setting_key === 'branding_logo_display_hero') defaults.logo_display_hero = value !== false;
+      if (s.setting_key === 'branding_logo_size') defaults.logo_size = value || 'medium';
+      if (s.setting_key === 'branding_logo_position') defaults.logo_position = value || 'top';
+    });
+
+    return defaults;
+  } catch (error) {
+    logger.error('Failed to get branding defaults', { error: error.message });
+    return { logo_display_hero: true, logo_size: 'medium', logo_position: 'top' };
+  }
+};
+
 // Use parseStringInput from shared parsers for customer data extraction
 const getCustomerNameFromPayload = (payload = {}) => parseStringInput(payload.customer_name);
 const getCustomerEmailFromPayload = (payload = {}) => parseStringInput(payload.customer_email);
@@ -218,8 +252,9 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // Get field requirements from settings
+    // Get field requirements and branding defaults from settings
     const fieldRequirements = await getEventFieldRequirements();
+    const brandingDefaults = await getBrandingDefaults();
 
     const {
       event_type,
@@ -256,7 +291,9 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       header_style = 'standard',
       hero_divider_style = 'wave',
       // Hero image anchor position (#162)
-      hero_image_anchor = 'center'
+      hero_image_anchor = 'center',
+      // Draft mode - events are drafts by default (no email sent until publish)
+      is_draft = true
     } = req.body;
 
     const customerName = getCustomerNameFromPayload(req.body);
@@ -411,12 +448,13 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       watermark_text,
       require_password: formatBoolean(requirePassword),
       css_template_id: css_template_id || null,
-      hero_logo_visible: formatBoolean(hero_logo_visible !== undefined ? hero_logo_visible : true),
-      hero_logo_size: hero_logo_size || 'medium',
-      hero_logo_position: hero_logo_position || 'top',
+      hero_logo_visible: formatBoolean(req.body.hero_logo_visible !== undefined ? hero_logo_visible : brandingDefaults.logo_display_hero),
+      hero_logo_size: req.body.hero_logo_size || brandingDefaults.logo_size || 'medium',
+      hero_logo_position: req.body.hero_logo_position || brandingDefaults.logo_position || 'top',
       header_style: effectiveHeaderStyle || 'standard',
       hero_divider_style: effectiveDividerStyle || 'wave',
-      hero_image_anchor: hero_image_anchor || 'center'
+      hero_image_anchor: hero_image_anchor || 'center',
+      is_draft: formatBoolean(is_draft)
     }).returning('id');
     
     // Handle both PostgreSQL (returns array of objects) and SQLite (returns array of IDs)
@@ -446,10 +484,10 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       { type: 'admin', id: req.admin.id, name: req.admin.username }
     );
     
-    // Queue creation email (only if there is a recipient)
+    // Queue creation email (only if there is a recipient and event is not a draft)
     // Language detection is handled by email processor
 
-    if (customerEmail) {
+    if (customerEmail && !is_draft) {
       await db('email_queue').insert({
         event_id: eventId,
         recipient_email: customerEmail,
@@ -481,7 +519,8 @@ router.post('/', adminAuth, requirePermission('events.create'), [
       require_password: requirePassword,
       share_link: shareUrl,
       expires_at: expires_at ? expires_at.toISOString() : null,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      is_draft
     });
   } catch (error) {
     console.error('Error creating event:', error);
@@ -521,7 +560,9 @@ router.get('/', adminAuth, requirePermission('events.view'), async (req, res) =>
 
     // Apply status filter
     if (status === 'active') {
-      query = query.where('is_active', formatBoolean(true)).where('is_archived', formatBoolean(false));
+      query = query.where('is_active', formatBoolean(true)).where('is_archived', formatBoolean(false)).where('is_draft', formatBoolean(false));
+    } else if (status === 'draft') {
+      query = query.where('is_draft', formatBoolean(true));
     } else if (status === 'archived') {
       query = query.where('is_archived', formatBoolean(true));
     } else if (status === 'inactive') {
@@ -1152,6 +1193,72 @@ router.post('/:id/resend-email', adminAuth, requirePermission('events.edit'), as
     console.error('Error resending creation email:', error);
     console.error('Stack trace:', error.stack);
     res.status(500).json({ error: 'Failed to resend creation email' });
+  }
+});
+
+// Publish draft event (set active + send creation email)
+router.post('/:id/publish', adminAuth, requirePermission('events.edit'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let eventQuery = db('events').where('id', id);
+    if (req.admin.roleName === 'editor') {
+      eventQuery = eventQuery.where('created_by', req.admin.id);
+    }
+    const event = await eventQuery.first();
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const isDraft = event.is_draft === true || event.is_draft === 1 || event.is_draft === '1';
+    if (!isDraft) {
+      return res.status(400).json({ error: 'Event is already published' });
+    }
+
+    // Publish the event
+    await db('events').where('id', id).update({
+      is_draft: formatBoolean(false)
+    });
+
+    // Build full share URL for the email
+    const shareToken = event.share_token;
+    const { shareUrl } = await buildShareLinkVariants({ slug: event.slug, shareToken });
+
+    // Queue creation email to the client
+    const recipientEmail = event.customer_email || event.host_email;
+    const recipientName = event.customer_name || event.host_name || (recipientEmail ? recipientEmail.split('@')[0] : null);
+
+    if (recipientEmail) {
+      await queueEmail(id, recipientEmail, 'gallery_created', {
+        customer_name: recipientName,
+        customer_email: recipientEmail,
+        host_name: recipientName,
+        event_name: event.event_name,
+        event_date: event.event_date,
+        gallery_link: shareUrl || event.share_link,
+        gallery_password: '{{password_security_message}}',
+        expiry_date: event.expires_at,
+        welcome_message: event.welcome_message || ''
+      });
+    }
+
+    await logActivity('event_published', {
+      ip_address: req.ip || '0.0.0.0',
+      user_agent: req.get('user-agent') || 'Unknown'
+    }, id, {
+      type: 'admin',
+      id: req.admin.id,
+      name: req.admin.username
+    });
+
+    res.json({
+      success: true,
+      message: 'Event published and client notified'
+    });
+  } catch (error) {
+    console.error('Error publishing event:', error);
+    res.status(500).json({ error: 'Failed to publish event' });
   }
 });
 

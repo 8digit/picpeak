@@ -190,6 +190,7 @@ export const EventsListPage: React.FC = () => {
   };
 
   const getEventStatus = (event: Event) => {
+    if (event.is_draft) return { label: t('events.draft'), color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/40' };
     if (event.is_archived) return { label: t('events.archived'), color: 'text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700' };
     if (!event.is_active) return { label: t('events.inactive'), color: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40' };
 
@@ -330,6 +331,13 @@ export const EventsListPage: React.FC = () => {
               onClick={() => setSearchParams({ filter: 'active' })}
             >
               {t('events.active')}
+            </Button>
+            <Button
+              variant={statusFilter === 'draft' ? 'primary' : 'outline'}
+              size="md"
+              onClick={() => setSearchParams({ filter: 'draft' })}
+            >
+              {t('events.draft')}
             </Button>
             <Button
               variant={isExpiringFilter ? 'primary' : 'outline'}

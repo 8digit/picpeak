@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const Handlebars = require('handlebars');
 const { db } = require('../database/db');
 const logger = require('../utils/logger');
+const { getFrontendBaseUrl } = require('../utils/frontendUrl');
 
 let transporter = null;
 let lastConfigHash = null;
@@ -197,7 +198,7 @@ async function processTemplate(template, variables, language = 'en') {
 
   // If no custom logo, use default PicPeak logo
   const apiUrl = process.env.API_URL || 'http://localhost:3001';
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3005';
+  const frontendUrl = (await getFrontendBaseUrl()) || 'http://localhost:3005';
   const logoFullUrl = logoUrl ? `${apiUrl}${logoUrl}` : `${frontendUrl}/picpeak-logo-transparent.png`;
 
   // Compile templates with Handlebars

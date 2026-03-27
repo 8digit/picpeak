@@ -74,7 +74,7 @@ router.get('/:slug/verify-token/:token', handleAsync(async (req, res) => {
   const { slug, token } = req.params;
 
   const event = await db('events')
-    .where({ slug, is_active: formatBoolean(true), is_archived: formatBoolean(false) })
+    .where({ slug, is_active: formatBoolean(true), is_archived: formatBoolean(false), is_draft: formatBoolean(false) })
     .select('id', 'share_link', 'share_token')
     .first();
 
@@ -105,6 +105,7 @@ router.get('/:slug/info', async (req, res) => {
         'expires_at',
         'is_active',
         'is_archived',
+        'is_draft',
         'share_link',
         'share_token',
         'allow_downloads',
@@ -142,6 +143,12 @@ router.get('/:slug/info', async (req, res) => {
     // Check if event is archived
     if (event.is_archived) {
       return res.status(404).json({ error: 'Gallery has been archived and is no longer available' });
+    }
+
+    // Check if event is still a draft
+    const isDraft = event.is_draft === true || event.is_draft === 1 || event.is_draft === '1';
+    if (isDraft) {
+      return res.status(404).json({ error: 'Gallery is not yet published' });
     }
     
     // If token provided, verify it matches the share link

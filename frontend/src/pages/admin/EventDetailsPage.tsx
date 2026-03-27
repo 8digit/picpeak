@@ -27,7 +27,8 @@ import {
   Droplets,
   MousePointer,
   Layout,
-  Trash2
+  Trash2,
+  Send
 } from 'lucide-react';
 import { parseISO, differenceInDays, isValid } from 'date-fns';
 
@@ -362,6 +363,19 @@ export const EventDetailsPage: React.FC = () => {
     },
   });
 
+  // Publish draft mutation
+  const publishMutation = useMutation({
+    mutationFn: () => eventsService.publishEvent(parseInt(id!)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-event', id] });
+      queryClient.invalidateQueries({ queryKey: ['admin-events'] });
+      toast.success(t('events.publishSuccess'));
+    },
+    onError: () => {
+      toast.error(t('errors.somethingWentWrong'));
+    },
+  });
+
   // Extend expiration mutation
   const extendMutation = useMutation({
     mutationFn: (days: number) => {
@@ -672,6 +686,11 @@ export const EventDetailsPage: React.FC = () => {
               >
                 {isGalleryPublic(event.require_password) ? t('events.publicAccess', 'Public access') : t('events.passwordProtected', 'Password protected')}
               </span>
+              {event.is_draft ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300">
+                  {t('events.draft')}
+                </span>
+              ) : null}
               {event.is_archived ? (
                 <span className="text-neutral-500 dark:text-neutral-400 flex items-center">
                   <Archive className="w-4 h-4 mr-1" />
@@ -750,6 +769,33 @@ export const EventDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Draft Mode Banner */}
+      {event.is_draft && (
+        <Card className="p-4 mb-6 border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-600">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
+              <p className="font-medium text-yellow-900 dark:text-yellow-200">
+                {t('events.draftBanner')}
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<Send className="w-4 h-4" />}
+              onClick={() => {
+                if (confirm(t('events.publishConfirm'))) {
+                  publishMutation.mutate();
+                }
+              }}
+              isLoading={publishMutation.isPending}
+            >
+              {t('events.publishAndNotify')}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Expiration Warning */}
       {!event.is_archived && (isExpired || isExpiring) && (
@@ -1514,22 +1560,40 @@ export const EventDetailsPage: React.FC = () => {
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">{t('events.actions')}</h2>
 
               <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  leftIcon={<Archive className="w-4 h-4" />}
-                  onClick={() => {
-                    if (confirm(t('events.archiveConfirm'))) {
-                      archiveMutation.mutate();
-                    }
-                  }}
-                  isLoading={archiveMutation.isPending}
-                  className="w-full justify-center"
-                >
-                  {t('events.archiveEvent')}
-                </Button>
+                {event.is_draft && (
+                  <Button
+                    variant="primary"
+                    leftIcon={<Send className="w-4 h-4" />}
+                    onClick={() => {
+                      if (confirm(t('events.publishConfirm'))) {
+                        publishMutation.mutate();
+                      }
+                    }}
+                    isLoading={publishMutation.isPending}
+                    className="w-full justify-center"
+                  >
+                    {t('events.publishAndNotify')}
+                  </Button>
+                )}
+
+                {!event.is_draft && (
+                  <Button
+                    variant="outline"
+                    leftIcon={<Archive className="w-4 h-4" />}
+                    onClick={() => {
+                      if (confirm(t('events.archiveConfirm'))) {
+                        archiveMutation.mutate();
+                      }
+                    }}
+                    isLoading={archiveMutation.isPending}
+                    className="w-full justify-center"
+                  >
+                    {t('events.archiveEvent')}
+                  </Button>
+                )}
 
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
-                  {t('events.archivingInfo')}
+                  {event.is_draft ? t('events.draftBanner') : t('events.archivingInfo')}
                 </p>
               </div>
             </Card>
