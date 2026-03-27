@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getApiBaseUrl, buildResourceUrl } from '../../utils/url';
 
-const DEFAULT_TITLE = 'PicPeak - Photo Sharing Platform';
+const DEFAULT_TITLE = '8digit Creative - Photo Gallery';
 
 export const DynamicFavicon: React.FC = () => {
   const { data: settings } = useQuery({
