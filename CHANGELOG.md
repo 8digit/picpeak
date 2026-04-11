@@ -5,6 +5,30 @@ All notable changes to PicPeak will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.5](https://github.com/the-luap/picpeak/compare/v2.6.4...v2.6.5) (2026-04-08)
+
+
+### Documentation
+
+* rewrite README — shorter, cleaner ([62643f2](https://github.com/the-luap/picpeak/commit/62643f241b51dc1620e30a8c8767f52428c0314c))
+* rewrite README — shorter, cleaner, less AI-sounding ([64f6061](https://github.com/the-luap/picpeak/commit/64f606152fde2db9034fa9ffa08cc58623edf646))
+
+## [2.6.4](https://github.com/the-luap/picpeak/compare/v2.6.3...v2.6.4) (2026-04-08)
+
+
+### Bug Fixes
+
+* sync backend package-lock.json for security deps ([bb81fa5](https://github.com/the-luap/picpeak/commit/bb81fa5f4b5f1bd927a02470ce80a13c4f53443f))
+* sync backend package-lock.json with security dep updates ([03e1989](https://github.com/the-luap/picpeak/commit/03e19893b3532a27aa59e7b834d53c6a2b52b7cd))
+
+## [2.6.3](https://github.com/the-luap/picpeak/compare/v2.6.2...v2.6.3) (2026-04-07)
+
+
+### Documentation
+
+* add External Media Library section to deployment guide ([#270](https://github.com/the-luap/picpeak/issues/270)) ([2e1c71c](https://github.com/the-luap/picpeak/commit/2e1c71c1ab073e488ac93e35337a2d3955dfef3d))
+* add External Media Library section to deployment guide ([#270](https://github.com/the-luap/picpeak/issues/270)) ([f6ca713](https://github.com/the-luap/picpeak/commit/f6ca713a6edc8ba371db790daba05ecb85ea4872))
+
 ## [2.6.2](https://github.com/the-luap/picpeak/compare/v2.6.1...v2.6.2) (2026-03-16)
 
 
