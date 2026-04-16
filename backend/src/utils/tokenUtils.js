@@ -92,6 +92,15 @@ function getGalleryTokenFromRequest(req, slug) {
     return header.substring(7);
   }
 
+  // Fallback: allow JWT via ?token= query param. Used by native <a download>
+  // links for bulk ZIP downloads, which cannot set an Authorization header.
+  // The cookie path alone is not reliable across all browsers (iOS Safari
+  // ITP, Private Browsing) so this gives us a deterministic auth channel.
+  const queryToken = req.query?.token;
+  if (typeof queryToken === 'string' && queryToken.length > 0) {
+    return queryToken;
+  }
+
   if (!req.cookies) {
     return null;
   }
