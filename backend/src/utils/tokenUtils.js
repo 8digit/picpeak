@@ -3,6 +3,7 @@ const GALLERY_COOKIE_NAME = 'gallery_token';
 const GALLERY_COOKIE_PREFIX = 'gallery_token_';
 
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const REMEMBER_ME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const secureCookie = (() => {
   if (typeof process.env.COOKIE_SECURE === 'string') {
@@ -41,9 +42,10 @@ function sanitizeSlugForCookie(slug = '') {
   return String(slug).replace(/[^A-Za-z0-9_-]/g, '_');
 }
 
-function setAdminAuthCookie(res, token) {
+function setAdminAuthCookie(res, token, { rememberMe = false } = {}) {
   if (!token) return;
-  res.cookie(ADMIN_COOKIE_NAME, token, buildCookieOptionsWithExpiry());
+  const maxAge = rememberMe ? REMEMBER_ME_MAX_AGE_MS : DEFAULT_MAX_AGE_MS;
+  res.cookie(ADMIN_COOKIE_NAME, token, buildCookieOptionsWithExpiry(maxAge));
 }
 
 function clearAdminAuthCookie(res) {
@@ -128,6 +130,8 @@ module.exports = {
   ADMIN_COOKIE_NAME,
   GALLERY_COOKIE_NAME,
   GALLERY_COOKIE_PREFIX,
+  DEFAULT_MAX_AGE_MS,
+  REMEMBER_ME_MAX_AGE_MS,
   sanitizeSlugForCookie,
   setAdminAuthCookie,
   clearAdminAuthCookie,

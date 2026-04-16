@@ -34,7 +34,8 @@ const router = express.Router();
 // Admin login with enhanced security
 router.post('/admin/login', [
   body('username').notEmpty().trim(),
-  body('password').notEmpty()
+  body('password').notEmpty(),
+  body('rememberMe').optional().isBoolean().toBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -42,7 +43,7 @@ router.post('/admin/login', [
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { username, password, recaptchaToken } = req.body;
+    const { username, password, recaptchaToken, rememberMe } = req.body;
     const ipAddress = getClientIp(req);
     const userAgent = req.headers['user-agent'] || '';
     
@@ -102,7 +103,11 @@ router.post('/admin/login', [
       last_login_ip: ipAddress
     });
 
-    // Generate token with additional claims including role
+    // Generate token with additional claims including role.
+    // If "Remember Me" was checked, issue a long-lived token (30 days) and
+    // matching cookie maxAge so the admin stays logged in across browser
+    // restarts. Otherwise default to a 24h session.
+    const rememberFlag = Boolean(rememberMe);
     const token = jwt.sign({
       id: admin.id,
       username: admin.username,
@@ -111,11 +116,11 @@ router.post('/admin/login', [
       ip: ipAddress,
       loginTime: Date.now()
     }, process.env.JWT_SECRET, {
-      expiresIn: '24h',
+      expiresIn: rememberFlag ? '30d' : '24h',
       issuer: 'picpeak-auth'
     });
 
-    setAdminAuthCookie(res, token);
+    setAdminAuthCookie(res, token, { rememberMe: rememberFlag });
 
     // Include role in response
     res.json({

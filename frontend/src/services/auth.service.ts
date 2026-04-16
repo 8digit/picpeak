@@ -14,12 +14,18 @@ const normalizeGalleryResponse = (response: GalleryAuthResponse): GalleryAuthRes
 
 export const authService = {
   // Admin authentication
-  async adminLogin(credentials: { email: string; password: string; recaptchaToken?: string | null }): Promise<LoginResponse> {
+  async adminLogin(credentials: {
+    email: string;
+    password: string;
+    recaptchaToken?: string | null;
+    rememberMe?: boolean;
+  }): Promise<LoginResponse> {
     // Backend expects 'username' field, but we accept email
     const response = await api.post<LoginResponse>('/auth/admin/login', {
       username: credentials.email,
       password: credentials.password,
-      recaptchaToken: credentials.recaptchaToken
+      recaptchaToken: credentials.recaptchaToken,
+      rememberMe: credentials.rememberMe ?? false
     });
     return response.data;
   },

@@ -25,6 +25,7 @@ export const AdminLoginPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Fetch branding settings
   const { data: settingsData } = useQuery({
@@ -81,7 +82,8 @@ export const AdminLoginPage: React.FC = () => {
     try {
       const response = await authService.adminLogin({
         ...formData,
-        recaptchaToken
+        recaptchaToken,
+        rememberMe
       });
       login(response.token, response.user);
       toast.success(t('adminLogin.loginSuccess'));
@@ -206,9 +208,11 @@ export const AdminLoginPage: React.FC = () => {
 
             {/* Remember Me */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500"
                 />
                 <span className="ml-2 text-sm text-neutral-700">{t('adminLogin.rememberMe')}</span>
