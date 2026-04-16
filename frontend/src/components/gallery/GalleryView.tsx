@@ -5,7 +5,10 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, SkeletonGalleryGrid, Skeleton } from '../common';
 import { useGalleryAuth, useTheme } from '../../contexts';
-import { useGalleryPhotos, useDownloadAllPhotos } from '../../hooks/useGallery';
+import { useGalleryPhotos } from '../../hooks/useGallery';
+import { toast } from 'react-toastify';
+import { getApiBaseUrl } from '../../utils/url';
+import { getGalleryToken } from '../../utils/galleryAuthStorage';
 import { PhotoGridWithLayouts } from './PhotoGridWithLayouts';
 import { ExpirationBanner } from './ExpirationBanner';
 import { CountdownTimer } from './CountdownTimer';
@@ -151,7 +154,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
   }, [disableRightClick]);
   
   // Data updates are handled by React Query
-  const downloadAllMutation = useDownloadAllPhotos();
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
 
   // Handle window resize
   useEffect(() => {
@@ -443,9 +446,52 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
     if (!allowDownloads) {
       return;
     }
-    
-    downloadAllMutation.mutate(slug);
-    
+
+    // Trigger the native download SYNCHRONOUSLY inside the click handler so
+    // the user-gesture stack is preserved. Wrapping this in react-query or
+    // any async boundary loses the gesture in Safari (iOS and desktop) and
+    // the <a download> click gets silently blocked.
+    //
+    // See commit history: this used to go through useDownloadAllPhotos
+    // mutation + galleryService.downloadAllPhotos(), but the microtask gap
+    // between the button onClick and the actual link.click() broke downloads
+    // for clients on Safari.
+    try {
+      const baseUrl = getApiBaseUrl();
+      const jwt = getGalleryToken(slug);
+      const downloadUrl = new URL(
+        `${baseUrl}/gallery/${encodeURIComponent(slug)}/download-all`,
+        window.location.origin
+      );
+      if (jwt) {
+        downloadUrl.searchParams.set('token', jwt);
+      }
+
+      const link = document.createElement('a');
+      link.href = downloadUrl.toString();
+      // Direct property assignment (not setAttribute) — more reliable on iOS.
+      link.download = `${slug}.zip`;
+      // target=_blank + rel=noopener lets iOS Safari treat this as a user-
+      // initiated download instead of a navigation of the current tab.
+      link.target = '_blank';
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      // Delay removal so the browser has time to start the navigation/
+      // download — removing immediately can cancel it in some browsers.
+      setTimeout(() => link.remove(), 1000);
+
+      setIsDownloadingAll(true);
+      // Clear the spinner after a short grace period — we have no way to
+      // know when the server-side ZIP actually finishes, but the browser
+      // now owns the download and will show its own progress UI.
+      setTimeout(() => setIsDownloadingAll(false), 3000);
+
+      toast.success(t('gallery.downloadStarted', 'Download started'));
+    } catch (err) {
+      toast.error(t('gallery.downloadFailed', 'Failed to download photos'));
+    }
+
     // Track download all action
     analyticsService.trackGalleryEvent('bulk_download', {
       gallery: slug,
@@ -657,7 +703,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
           selectedCount={selectedPhotos.size}
           onDownloadAll={handleDownloadAll}
           onDownloadSelected={handleDownloadSelected}
-          isDownloading={downloadAllMutation.isPending}
+          isDownloading={isDownloadingAll}
           allowDownloads={allowDownloads}
           photoCounts={photoCounts}
           totalPhotos={data?.photos.length || 0}
@@ -685,7 +731,7 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
         onLogout={logout}
         showDownloadAll={!showSidebar && allowDownloads}
         onDownloadAll={handleDownloadAll}
-        isDownloading={downloadAllMutation.isPending}
+        isDownloading={isDownloadingAll}
         menuButton={showSidebar ? (
           <Button
             variant="ghost"
