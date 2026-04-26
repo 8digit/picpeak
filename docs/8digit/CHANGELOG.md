@@ -5,6 +5,22 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-04-26 — In-App Confirmation Dialogs
+
+### Bug Fixes
+- **`window.confirm()` silently suppressed by browsers, breaking critical buttons**
+  - Root cause: 17 admin actions (Publish, Delete Event, Delete Photo, Archive, etc.) used native `window.confirm()`. Browsers can permanently silence the dialog if a user ever clicks "Prevent this page from creating additional dialogs" — clicking the button then does nothing visibly.
+  - Fix: new `ConfirmDialogProvider` + `useConfirm()` hook in `components/common/ConfirmDialog.tsx`. Promise-based API: `if (await confirm({...})) { ... }`. Mounted at `App.tsx`. All 17 native confirms across 11 files migrated.
+  - Bonus: dialogs now respect dark mode, support i18n, support Esc/Enter, and have a visual `danger`/`warning`/`primary` variant for destructive actions.
+
+### Files Changed
+- NEW: `frontend/src/components/common/ConfirmDialog.tsx`
+- MOD: `frontend/src/components/common/index.ts` (exports)
+- MOD: `frontend/src/App.tsx` (mount provider)
+- MOD: 11 admin files migrated to `useConfirm()`: `EventDetailsPage.tsx` (×3), `EventsListPage.tsx`, `ArchivesPage.tsx` (×2), `EventFeedbackPage.tsx`, `CMSPage.tsx`, `AdminPhotoGrid.tsx` (×2), `AdminPhotoViewer.tsx` (×2), `FeedbackModerationPanel.tsx`, `CssTemplateEditor.tsx`, `CategoryManager.tsx`, `EventCategoryManager.tsx`, `WordFilterManager.tsx`
+
+---
+
 ## 2026-04-26 — Pivoted Guest Feedback CSV Export
 
 ### Features

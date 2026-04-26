@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AdminPhoto } from '../../services/photos.service';
 import { photosService } from '../../services/photos.service';
-import { Button } from '../common';
+import { Button, useConfirm } from '../common';
 import { AdminAuthenticatedImage } from './AdminAuthenticatedImage';
 import { BulkCategoryModal } from './BulkCategoryModal';
 
@@ -32,6 +32,7 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = ({
   categories = []
 }) => {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [selectedPhotos, setSelectedPhotos] = useState<Set<number>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -71,7 +72,12 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = ({
   const handleDeleteSingle = async (photo: AdminPhoto, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (!confirm(`Are you sure you want to delete "${photo.filename}"?`)) {
+    if (!(await confirm({
+      title: t('photos.deletePhoto', 'Delete Photo'),
+      message: t('photos.deletePhotoConfirm', { filename: photo.filename, defaultValue: `Are you sure you want to delete "${photo.filename}"?` }),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Delete'),
+    }))) {
       return;
     }
 
@@ -94,7 +100,12 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = ({
     if (selectedPhotos.size === 0) return;
 
     const count = selectedPhotos.size;
-    if (!confirm(`Are you sure you want to delete ${count} photo${count > 1 ? 's' : ''}?`)) {
+    if (!(await confirm({
+      title: t('photos.deleteSelected', 'Delete Photos'),
+      message: t('photos.deleteSelectedConfirm', { count, defaultValue: `Are you sure you want to delete ${count} photo${count > 1 ? 's' : ''}?` }),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Delete'),
+    }))) {
       return;
     }
 

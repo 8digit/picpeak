@@ -4,7 +4,7 @@ import { Plus, X, Loader2, Image as ImageIcon, Check } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { categoriesService, type PhotoCategory } from '../../services/categories.service';
 import { photosService } from '../../services/photos.service';
-import { Button, Card, AuthenticatedImage } from '../common';
+import { Button, Card, AuthenticatedImage, useConfirm } from '../common';
 import { useTranslation } from 'react-i18next';
 
 interface EventCategoryManagerProps {
@@ -14,6 +14,7 @@ interface EventCategoryManagerProps {
 export const EventCategoryManager: React.FC<EventCategoryManagerProps> = ({ eventId }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [isAdding, setIsAdding] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [heroPickerCategoryId, setHeroPickerCategoryId] = useState<number | null>(null);
@@ -85,8 +86,13 @@ export const EventCategoryManager: React.FC<EventCategoryManagerProps> = ({ even
     }
   };
 
-  const handleDelete = (category: PhotoCategory) => {
-    if (window.confirm(t('categories.deleteConfirm', { name: category.name }))) {
+  const handleDelete = async (category: PhotoCategory) => {
+    if (await confirm({
+      title: t('common.delete', 'Delete'),
+      message: t('categories.deleteConfirm', { name: category.name }),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Delete'),
+    })) {
       deleteMutation.mutate(category.id);
     }
   };

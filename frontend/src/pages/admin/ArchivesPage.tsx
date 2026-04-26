@@ -15,7 +15,7 @@ import {
 import { format, parseISO, isValid } from 'date-fns';
 import { toast } from 'react-toastify';
 
-import { Button, Input, Card, Loading } from '../../components/common';
+import { Button, Input, Card, Loading, useConfirm } from '../../components/common';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { archiveService } from '../../services/archive.service';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,7 @@ export const ArchivesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   // const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   // Helper function to safely format dates
   const formatDate = (dateString: string | null | undefined, formatStr: string): string => {
@@ -109,14 +110,22 @@ export const ArchivesPage: React.FC = () => {
     }
   };
 
-  const handleRestore = (archive: typeof archives[0]) => {
-    if (confirm(t('archives.confirmRestore').replace('{{name}}', archive.eventName))) {
+  const handleRestore = async (archive: typeof archives[0]) => {
+    if (await confirm({
+      title: t('archives.restoreSuccess'),
+      message: t('archives.confirmRestore').replace('{{name}}', archive.eventName),
+    })) {
       restoreMutation.mutate(archive.id);
     }
   };
 
-  const handleDelete = (archive: typeof archives[0]) => {
-    if (confirm(t('archives.confirmDelete').replace('{{name}}', archive.eventName))) {
+  const handleDelete = async (archive: typeof archives[0]) => {
+    if (await confirm({
+      title: t('archives.deleteSuccess'),
+      message: t('archives.confirmDelete').replace('{{name}}', archive.eventName),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Delete'),
+    })) {
       deleteMutation.mutate(archive.id);
     }
   };

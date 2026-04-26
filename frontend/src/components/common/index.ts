@@ -22,3 +22,5 @@ export { ProtectedImage } from './ProtectedImage';
 export { ProtectionWarning } from './ProtectionWarning';
 export { ReCaptcha } from './ReCaptcha';
 export { PasswordGenerator } from './PasswordGenerator';
+export { ConfirmDialogProvider, useConfirm } from './ConfirmDialog';
+export type { ConfirmOptions, ConfirmVariant } from './ConfirmDialog';

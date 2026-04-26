@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
 import DOMPurify from 'dompurify';
 
-import { Button, Card, Input, Loading } from '../../components/common';
+import { Button, Card, Input, Loading, useConfirm } from '../../components/common';
 import { CMSEditor } from '../../components/admin/CMSEditor';
 import { cmsService } from '../../services/cms.service';
 import type { CMSPage as CMSPageType } from '../../services/cms.service';
@@ -15,6 +15,7 @@ import { settingsService, PublicSiteBranding } from '../../services/settings.ser
 export const CMSPage: React.FC = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [selectedPage, setSelectedPage] = useState<string>('impressum');
   const [editingLang, setEditingLang] = useState<'en' | 'de'>('en');
   const [editForm, setEditForm] = useState<Partial<CMSPageType>>({});
@@ -467,9 +468,14 @@ export const CMSPage: React.FC = () => {
               {pages?.map((page) => (
                 <button
                   key={page.slug}
-                  onClick={() => {
+                  onClick={async () => {
                     if (hasUnsavedChanges) {
-                      if (confirm('You have unsaved changes. Do you want to save them?')) {
+                      if (await confirm({
+                        title: 'Unsaved Changes',
+                        message: 'You have unsaved changes. Do you want to save them?',
+                        confirmLabel: 'Save',
+                        cancelLabel: 'Discard',
+                      })) {
                         handleSave();
                       }
                     }

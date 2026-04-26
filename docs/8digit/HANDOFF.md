@@ -83,6 +83,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 
 ### Recent Changes (2026-04-26)
 12. **Pivoted guest feedback CSV export** — export now outputs one row per (photo, guest) instead of one row per action. Columns: `filename`, `guest_name`, `guest_email`, `is_favorited`, `is_liked`, `star_rating`, `comment`. Hidden feedback excluded. Booleans as `yes`/`no`.
+13. **In-app `ConfirmDialog`** — replaced 17 `window.confirm()` calls with a promise-based `useConfirm()` hook to fix browser-silenced dialogs (Publish & Notify Client, Delete Event, Delete Photo, Archive, etc.). New file: `frontend/src/components/common/ConfirmDialog.tsx`. Mount: `App.tsx`. Going forward: never use `window.confirm()` — use `useConfirm()`.
 
 ### Previous Changes (2026-04-15)
 9. **Gallery ZIP download fix** — replaced blob buffering with native browser downloads; fixed iOS Safari memory stall on large galleries (1GB+). Auth via `?token=` query param fallback.

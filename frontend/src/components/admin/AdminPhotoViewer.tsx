@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminPhoto } from '../../services/photos.service';
 import { photosService } from '../../services/photos.service';
 import { feedbackService, type PhotoFeedback, type FeedbackSummary } from '../../services/feedback.service';
-import { Button } from '../common';
+import { Button, useConfirm } from '../common';
 import { AdminAuthenticatedImage } from './AdminAuthenticatedImage';
 import { AdminAuthenticatedVideo } from './AdminAuthenticatedVideo';
 
@@ -38,6 +38,7 @@ export const AdminPhotoViewer: React.FC<AdminPhotoViewerProps> = ({
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [expandedComments, setExpandedComments] = useState(false);
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   
   const currentPhoto = photos[currentIndex];
   const isVideo = currentPhoto
@@ -74,7 +75,12 @@ export const AdminPhotoViewer: React.FC<AdminPhotoViewerProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${currentPhoto.filename}"?`)) {
+    if (!(await confirm({
+      title: 'Delete Photo',
+      message: `Are you sure you want to delete "${currentPhoto.filename}"?`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+    }))) {
       return;
     }
 
@@ -481,8 +487,13 @@ export const AdminPhotoViewer: React.FC<AdminPhotoViewerProps> = ({
                               )}
                               
                               <button
-                                onClick={() => {
-                                  if (confirm('Are you sure you want to delete this comment?')) {
+                                onClick={async () => {
+                                  if (await confirm({
+                                    title: 'Delete Comment',
+                                    message: 'Are you sure you want to delete this comment?',
+                                    variant: 'danger',
+                                    confirmLabel: 'Delete',
+                                  })) {
                                     deleteFeedbackMutation.mutate(comment.id.toString());
                                   }
                                 }}

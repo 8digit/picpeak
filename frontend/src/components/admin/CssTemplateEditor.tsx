@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { Save, RotateCcw, Code, AlertTriangle, Check } from 'lucide-react';
-import { Button, Card, Loading } from '../common';
+import { Button, Card, Loading, useConfirm } from '../common';
 import { cssTemplatesService, CssTemplate } from '../../services/cssTemplates.service';
 
 export const CssTemplateEditor: React.FC = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [activeSlot, setActiveSlot] = useState(1);
   const [localTemplates, setLocalTemplates] = useState<CssTemplate[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -77,8 +78,13 @@ export const CssTemplateEditor: React.FC = () => {
     setHasChanges(true);
   };
 
-  const handleReset = () => {
-    if (!confirm(t('cssTemplates.resetConfirm', 'Reset this template to the default? Your changes will be lost.'))) {
+  const handleReset = async () => {
+    if (!(await confirm({
+      title: t('cssTemplates.reset', 'Reset Template'),
+      message: t('cssTemplates.resetConfirm', 'Reset this template to the default? Your changes will be lost.'),
+      variant: 'warning',
+      confirmLabel: t('cssTemplates.reset', 'Reset'),
+    }))) {
       return;
     }
     resetMutation.mutate();

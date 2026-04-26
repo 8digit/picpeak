@@ -52,7 +52,7 @@ const safeParseDate = (dateValue: unknown): Date | null => {
 import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
-import { Button, Input, Card, Loading } from '../../components/common';
+import { Button, Input, Card, Loading, useConfirm } from '../../components/common';
 import { EventCategoryManager, AdminPhotoGrid, AdminPhotoViewer, PhotoFilters, PasswordResetModal, ThemeCustomizerEnhanced, ThemeDisplay, HeroPhotoSelector, FocalPointPicker, PhotoUploadModal, FeedbackSettings, FeedbackModerationPanel, EventRenameDialog, PhotoFilterPanel, PhotoExportMenu } from '../../components/admin';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
@@ -138,7 +138,8 @@ export const EventDetailsPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { format } = useLocalizedDate();
-  
+  const confirm = useConfirm();
+
   // Validate ID parameter
   React.useEffect(() => {
     if (!id || isNaN(parseInt(id))) {
@@ -812,8 +813,12 @@ export const EventDetailsPage: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={<Send className="w-4 h-4" />}
-              onClick={() => {
-                if (confirm(t('events.publishConfirm'))) {
+              onClick={async () => {
+                if (await confirm({
+                  title: t('events.publishAndNotify'),
+                  message: t('events.publishConfirm'),
+                  confirmLabel: t('events.publishAndNotify'),
+                })) {
                   publishMutation.mutate();
                 }
               }}
@@ -847,8 +852,11 @@ export const EventDetailsPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  if (confirm(t('events.extendExpiration', { days: 7 }) + '?')) {
+                onClick={async () => {
+                  if (await confirm({
+                    title: t('events.extendSevenDays'),
+                    message: t('events.extendExpiration', { days: 7 }) + '?',
+                  })) {
                     extendMutation.mutate(7);
                   }
                 }}
@@ -1604,8 +1612,12 @@ export const EventDetailsPage: React.FC = () => {
                   <Button
                     variant="primary"
                     leftIcon={<Send className="w-4 h-4" />}
-                    onClick={() => {
-                      if (confirm(t('events.publishConfirm'))) {
+                    onClick={async () => {
+                      if (await confirm({
+                        title: t('events.publishAndNotify'),
+                        message: t('events.publishConfirm'),
+                        confirmLabel: t('events.publishAndNotify'),
+                      })) {
                         publishMutation.mutate();
                       }
                     }}
@@ -1620,8 +1632,13 @@ export const EventDetailsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     leftIcon={<Archive className="w-4 h-4" />}
-                    onClick={() => {
-                      if (confirm(t('events.archiveConfirm'))) {
+                    onClick={async () => {
+                      if (await confirm({
+                        title: t('events.archiveEvent'),
+                        message: t('events.archiveConfirm'),
+                        variant: 'warning',
+                        confirmLabel: t('events.archiveEvent'),
+                      })) {
                         archiveMutation.mutate();
                       }
                     }}

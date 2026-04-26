@@ -29,7 +29,7 @@ import {
 } from './pages/admin';
 import { AcceptInvitePage } from './pages/public/AcceptInvitePage';
 import { AdminLayout, AdminAuthWrapper } from './components/admin';
-import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags } from './components/common';
+import { PageErrorBoundary, OfflineIndicator, SkipLink, DynamicFavicon, RobotsMetaTags, ConfirmDialogProvider } from './components/common';
 import { MaintenanceWrapper } from './components/MaintenanceWrapper';
 import { GlobalThemeProvider } from './components/GlobalThemeProvider';
 import { getApiBaseUrl } from './utils/url';
@@ -117,6 +117,7 @@ function App() {
               <RobotsMetaTags />
               <Router>
                 <MaintenanceWrapper>
+                  <ConfirmDialogProvider>
                   <SkipLink />
                   <Routes>
                   {/* Public gallery routes */}
@@ -160,6 +161,7 @@ function App() {
                   {/* Default redirect */}
                   <Route path="/" element={<Navigate to="/admin/login" replace />} />
                 </Routes>
+                </ConfirmDialogProvider>
               </MaintenanceWrapper>
             </Router>
 

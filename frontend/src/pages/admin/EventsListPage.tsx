@@ -18,7 +18,7 @@ import { parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'react-toastify';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
 
-import { Button, Input, Card, SkeletonTable, ErrorBoundary } from '../../components/common';
+import { Button, Input, Card, SkeletonTable, ErrorBoundary, useConfirm } from '../../components/common';
 import { BulkArchiveModal } from '../../components/admin';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventsService } from '../../services/events.service';
@@ -38,6 +38,7 @@ export const EventsListPage: React.FC = () => {
   const { format } = useLocalizedDate();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -576,11 +577,16 @@ export const EventsListPage: React.FC = () => {
                                     </button>
                                   ) : null}
                                   <button
-                                    onClick={() => {
-                                      if (confirm(t('events.deleteEventConfirm'))) {
+                                    onClick={async () => {
+                                      setActiveDropdown(null);
+                                      setDropdownPosition(null);
+                                      if (await confirm({
+                                        title: t('events.deleteEvent'),
+                                        message: t('events.deleteEventConfirm'),
+                                        variant: 'danger',
+                                        confirmLabel: t('events.deleteEvent'),
+                                      })) {
                                         deleteMutation.mutate(event.id);
-                                        setActiveDropdown(null);
-                                        setDropdownPosition(null);
                                       }
                                     }}
                                     className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"

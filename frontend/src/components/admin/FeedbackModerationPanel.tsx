@@ -11,7 +11,7 @@ import {
 import { parseISO } from 'date-fns';
 import { toast } from 'react-toastify';
 
-import { Card, Loading, Button } from '../common';
+import { Card, Loading, Button, useConfirm } from '../common';
 import { AdminAuthenticatedImage } from './AdminAuthenticatedImage';
 import { feedbackService, type FeedbackResponse, type PhotoFeedback } from '../../services/feedback.service';
 import { useLocalizedDate } from '../../hooks/useLocalizedDate';
@@ -32,6 +32,7 @@ export const FeedbackModerationPanel: React.FC<FeedbackModerationPanelProps> = (
   const { t } = useTranslation();
   const { format } = useLocalizedDate();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [showAll, setShowAll] = useState(false);
 
   // Fetch pending feedback
@@ -172,8 +173,13 @@ export const FeedbackModerationPanel: React.FC<FeedbackModerationPanelProps> = (
                         size="sm"
                         variant="ghost"
                         leftIcon={<Trash2 className="w-4 h-4" />}
-                        onClick={() => {
-                          if (confirm(t('feedback.confirmDelete', 'Are you sure you want to delete this comment?'))) {
+                        onClick={async () => {
+                          if (await confirm({
+                            title: t('common.delete', 'Delete'),
+                            message: t('feedback.confirmDelete', 'Are you sure you want to delete this comment?'),
+                            variant: 'danger',
+                            confirmLabel: t('common.delete', 'Delete'),
+                          })) {
                             deleteMutation.mutate(item.id.toString());
                           }
                         }}

@@ -18,7 +18,7 @@ import {
 import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
 
-import { Button, Card, Loading } from '../../components/common';
+import { Button, Card, Loading, useConfirm } from '../../components/common';
 import { AdminAuthenticatedImage } from '../../components/admin/AdminAuthenticatedImage';
 import { FeedbackSettings } from '../../components/admin';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,7 +31,8 @@ export const EventFeedbackPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  
+  const confirm = useConfirm();
+
   const [activeTab, setActiveTab] = useState<'settings' | 'feedback' | 'analytics' | 'moderation'>('settings');
   const [feedbackFilter, setFeedbackFilter] = useState({
     type: '',
@@ -345,8 +346,13 @@ export const EventFeedbackPage: React.FC = () => {
                             size="sm"
                             variant="ghost"
                             leftIcon={<Trash2 className="w-4 h-4" />}
-                            onClick={() => {
-                              if (confirm(t('feedback.confirmDelete', 'Are you sure you want to delete this feedback?'))) {
+                            onClick={async () => {
+                              if (await confirm({
+                                title: t('common.delete', 'Delete'),
+                                message: t('feedback.confirmDelete', 'Are you sure you want to delete this feedback?'),
+                                variant: 'danger',
+                                confirmLabel: t('common.delete', 'Delete'),
+                              })) {
                                 deleteMutation.mutate(item.id.toString());
                               }
                             }}

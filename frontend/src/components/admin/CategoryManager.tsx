@@ -4,11 +4,12 @@ import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { categoriesService, type PhotoCategory } from '../../services/categories.service';
-import { Button } from '../common';
+import { Button, useConfirm } from '../common';
 
 export const CategoryManager: React.FC = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -74,8 +75,13 @@ export const CategoryManager: React.FC = () => {
     }
   };
 
-  const handleDelete = (category: PhotoCategory) => {
-    if (window.confirm(t('categories.deleteConfirm', { name: category.name }))) {
+  const handleDelete = async (category: PhotoCategory) => {
+    if (await confirm({
+      title: t('common.delete', 'Delete'),
+      message: t('categories.deleteConfirm', { name: category.name }),
+      variant: 'danger',
+      confirmLabel: t('common.delete', 'Delete'),
+    })) {
       deleteMutation.mutate(category.id);
     }
   };
