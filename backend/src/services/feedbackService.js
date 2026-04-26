@@ -365,13 +365,15 @@ class FeedbackService {
   }
 
   /**
-   * Export feedback data for an event
+   * Export feedback data for an event — one row per (photo, guest) pair.
+   * Columns: filename, is_favorited, is_liked, star_rating, comment, guest_name, guest_email
    */
   async exportEventFeedback(eventId) {
     try {
-      const feedback = await db('photo_feedback')
+      const rows = await db('photo_feedback')
         .join('photos', 'photo_feedback.photo_id', 'photos.id')
         .where('photo_feedback.event_id', eventId)
+        .where('photo_feedback.is_hidden', false)
         .select(
           'photos.filename',
           'photo_feedback.feedback_type',
@@ -379,12 +381,38 @@ class FeedbackService {
           'photo_feedback.comment_text',
           'photo_feedback.guest_name',
           'photo_feedback.guest_email',
-          'photo_feedback.created_at'
+          'photo_feedback.guest_identifier'
         )
         .orderBy('photos.filename')
-        .orderBy('photo_feedback.created_at');
-      
-      return feedback;
+        .orderBy('photo_feedback.guest_identifier');
+
+      // Pivot: one row per (filename, guest_identifier)
+      const map = new Map();
+      for (const row of rows) {
+        const key = `${row.filename}::${row.guest_identifier}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            filename: row.filename,
+            guest_name: row.guest_name || '',
+            guest_email: row.guest_email || '',
+            is_favorited: false,
+            is_liked: false,
+            star_rating: '',
+            comment: '',
+          });
+        }
+        const entry = map.get(key);
+        if (row.guest_name) entry.guest_name = row.guest_name;
+        if (row.guest_email) entry.guest_email = row.guest_email;
+        switch (row.feedback_type) {
+          case 'favorite': entry.is_favorited = true; break;
+          case 'like':     entry.is_liked = true; break;
+          case 'rating':   entry.star_rating = row.rating; break;
+          case 'comment':  entry.comment = row.comment_text || ''; break;
+        }
+      }
+
+      return Array.from(map.values());
     } catch (error) {
       logger.error('Error exporting feedback:', error);
       throw error;

@@ -1,6 +1,68 @@
 # 8digit Creative — Fork Changelog
 
-All changes made to our fork of PicPeak (github.com/8digit/picpeak), on top of upstream v2.6.2.
+All changes made to our fork of PicPeak (github.com/8digit/picpeak), on top of upstream v2.6.2+.
+Newest entries first. See `docs/8digit/handoffs/` for detailed session narratives.
+
+---
+
+## 2026-04-26 — Pivoted Guest Feedback CSV Export
+
+### Features
+- **Feedback CSV export now pivoted (one row per photo per guest)**
+  - Previously: one row per feedback action (a photo with like + rating + comment appeared 3 times)
+  - Now: one row per `(filename, guest_identifier)` pair with columns `filename`, `guest_name`, `guest_email`, `is_favorited`, `is_liked`, `star_rating`, `comment`
+  - Hidden/moderated feedback excluded from export
+  - Booleans render as `yes`/`no` instead of `true`/`false`/`''`
+
+### Files Changed
+- MOD: `backend/src/services/feedbackService.js` (exportEventFeedback — pivoted query + JS map)
+- MOD: `backend/src/routes/adminFeedback.js` (convertToCSV — boolean and null handling)
+
+---
+
+## 2026-04-15 — Gallery Download Fix & Admin Remember Me
+
+### Bug Fixes
+- **Gallery "Download All" stalls on iOS Safari** (`0de319e`, `a52b49a`)
+  - Root cause 1: `downloadAllPhotos` used `axios.get({ responseType: 'blob' })` which buffered the entire ZIP (1GB+) in the JS heap — exceeded Safari iOS per-tab memory cap (~300-500MB), tab silently stalled
+  - Root cause 2: After switching to native `<a download>`, the click was inside a react-query `useMutation` wrapper — the microtask boundary broke Safari's trusted user gesture chain, silently blocking the download
+  - Fix: Native `<a download>` click runs synchronously inside `handleDownloadAll` (no async boundary). JWT passed via `?token=` query param since native anchor clicks can't set Authorization headers. Backend `getGalleryTokenFromRequest` now accepts query param fallback.
+
+- **Admin "Remember Me" causes login loop** (`d062865`)
+  - Root cause: checkbox had local state but was never sent to backend; cookie always expired at 24h; stale sessionStorage made frontend think it was still authenticated → infinite form/loading loop
+  - Fix: wired end-to-end — frontend sends `rememberMe` flag, backend issues 30-day JWT + matching 30-day cookie maxAge when checked, falls back to 24h otherwise
+
+### Files Changed
+- MOD: `frontend/src/components/gallery/GalleryView.tsx` (inline download anchor, removed mutation wrapper)
+- MOD: `frontend/src/services/gallery.service.ts` (native download for downloadAllPhotos + downloadSelectedPhotos)
+- MOD: `backend/src/utils/tokenUtils.js` (query param fallback in getGalleryTokenFromRequest, REMEMBER_ME_MAX_AGE_MS, setAdminAuthCookie rememberMe param)
+- MOD: `backend/src/routes/auth.js` (accept rememberMe, 30d JWT/cookie)
+- MOD: `frontend/src/services/auth.service.ts` (pass rememberMe in adminLogin)
+- MOD: `frontend/src/pages/admin/AdminLoginPage.tsx` (wire rememberMe checkbox)
+
+---
+
+## 2026-03-27 — Editable Client Email & Draft Preview
+
+### Features
+- **Editable client email after event creation** (`15fe047`)
+  - Added `customer_email` field to the event edit form (was only settable at creation time)
+  - Allows creating events without client email, then adding it before publishing
+
+- **Admin draft gallery preview** (`15fe047`)
+  - New "Preview Gallery" button (yellow, with eye icon) on draft events
+  - Generates a short-lived JWT preview token (1 hour) via `GET /admin/events/:id/preview-token`
+  - Gallery middleware, resolve, info, and verify-token endpoints all respect `?preview=<token>` param
+  - Admin can see exactly how the gallery will look before publishing — clients cannot
+
+### Files Changed
+- MOD: `backend/src/middleware/gallery.js` (isAdminPreview helper, draft bypass in all 3 query points)
+- MOD: `backend/src/routes/adminEvents.js` (preview-token endpoint)
+- MOD: `backend/src/routes/gallery.js` (preview support in resolve, verify-token, info)
+- MOD: `backend/src/services/shareLinkService.js` (includeDrafts option in resolveShareIdentifier)
+- MOD: `frontend/src/pages/admin/EventDetailsPage.tsx` (customer_email in edit form, Preview Gallery button)
+- MOD: `frontend/src/services/events.service.ts` (getPreviewToken method)
+- MOD: `frontend/src/services/gallery.service.ts` (pass preview param to all gallery API calls)
 
 ---
 

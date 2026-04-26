@@ -425,21 +425,22 @@ router.delete('/word-filters/:id',
 // Helper function to convert JSON to CSV
 function convertToCSV(data) {
   if (!data || data.length === 0) return '';
-  
+
   const headers = Object.keys(data[0]);
   const csvHeaders = headers.join(',');
-  
+
   const csvRows = data.map(row => {
     return headers.map(header => {
       const value = row[header];
-      // Escape quotes and wrap in quotes if contains comma
-      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+      if (typeof value === 'boolean') return value ? 'yes' : 'no';
+      if (value === null || value === undefined) return '';
+      if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
         return `"${value.replace(/"/g, '""')}"`;
       }
-      return value || '';
+      return value;
     }).join(',');
   });
-  
+
   return [csvHeaders, ...csvRows].join('\n');
 }
 
