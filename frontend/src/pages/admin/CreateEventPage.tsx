@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Calendar,
@@ -134,15 +134,22 @@ export const CreateEventPage: React.FC = () => {
     queryFn: () => eventTypesService.getActiveEventTypes()
   });
 
-  // Compute event types to use (API data or fallback)
-  const availableEventTypes = eventTypes?.length
-    ? eventTypes.map(et => ({
-        value: et.slug_prefix,
-        name: et.name,
-        emoji: et.emoji,
-        theme_preset: et.theme_preset
-      }))
-    : FALLBACK_EVENT_TYPES;
+  // Memoized so the derived array keeps a stable reference between renders.
+  // Without useMemo, every render creates a new array, causing the useEffect
+  // below (which depends on this value) to fire on every keystroke/state
+  // change — overwriting any theme customization the user made.
+  const availableEventTypes = useMemo(
+    () =>
+      eventTypes?.length
+        ? eventTypes.map(et => ({
+            value: et.slug_prefix,
+            name: et.name,
+            emoji: et.emoji,
+            theme_preset: et.theme_preset
+          }))
+        : FALLBACK_EVENT_TYPES,
+    [eventTypes]
+  );
 
   // Fetch default settings
   const { data: settings } = useQuery({

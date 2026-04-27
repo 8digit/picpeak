@@ -1,10 +1,11 @@
 /* Gallery Story Layout - Dark cinematic aesthetic with gold accents */
 
 .gallery-story-layout {
-  --story-background: #0d0d0d;
-  --story-foreground: #f2f2f2;
-  --story-primary: #c9a961;
-  --story-primary-foreground: #0d0d0d;
+  /* Bridge to ThemeContext CSS variables; fallbacks preserve the original cinematic dark look */
+  --story-background: var(--color-background, #0d0d0d);
+  --story-foreground: var(--color-text, #f2f2f2);
+  --story-primary: var(--color-primary, #c9a961);
+  --story-primary-foreground: var(--color-background, #0d0d0d);
   --story-muted: #1a1a1a;
   --story-muted-foreground: #a3a3a3;
   --story-border: #262626;
@@ -12,7 +13,7 @@
   min-height: 100vh;
   background-color: var(--story-background);
   color: var(--story-foreground);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family, 'Inter'), sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -27,7 +28,7 @@
 .gallery-story-layout h4,
 .gallery-story-layout h5,
 .gallery-story-layout h6 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--heading-font-family, 'Playfair Display'), Georgia, serif;
 }
 
 /* Custom Scrollbar */
@@ -71,7 +72,7 @@
 }
 
 .story-nav-logo {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--heading-font-family, 'Playfair Display'), Georgia, serif;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.25em;
@@ -199,7 +200,7 @@
 }
 
 .story-hero-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--heading-font-family, 'Playfair Display'), Georgia, serif;
   font-size: 3.75rem;
   font-style: italic;
   line-height: 1.1;
@@ -408,7 +409,7 @@
   color: white;
   font-size: 0.875rem;
   font-weight: 500;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--heading-font-family, 'Playfair Display'), Georgia, serif;
   letter-spacing: 0.05em;
 }
 

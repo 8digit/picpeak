@@ -180,6 +180,7 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
   onLogout,
   hidePoweredBy = false,
   companyName,
+  heroLogoVisible = true,
 }) => {
   // These props are passed by parent but we use our own lightbox, so mark as intentionally unused
   void _onPhotoClick;
@@ -390,7 +391,7 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
           </div>
 
           <div className="gallery-premium-nav-title">
-            {eventLogo ? (
+            {heroLogoVisible && eventLogo ? (
               <img src={eventLogo} alt={eventName || 'Gallery'} className="gallery-premium-nav-logo-img" />
             ) : (
               eventName ? eventName.split(' ').map(w => w[0]).join('').slice(0, 3) : 'Gallery'

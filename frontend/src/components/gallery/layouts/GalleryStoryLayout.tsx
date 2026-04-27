@@ -56,7 +56,8 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
   feedbackEnabled = false,
   feedbackOptions,
   heroPhotoOverride,
-  onLogout
+  onLogout,
+  heroLogoVisible = true,
 }) => {
   // These props are passed by parent but we use our own feedback system, so mark as intentionally unused
   void _onPhotoClick;
@@ -244,7 +245,7 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
 
       {/* Navigation Overlay */}
       <nav className={`story-nav ${scrolled ? 'scrolled' : ''}`}>
-        {eventLogo ? (
+        {heroLogoVisible && eventLogo ? (
           <img src={eventLogo} alt={eventName || 'Gallery'} className="story-nav-logo-img" />
         ) : (
           <span className="story-nav-logo">
