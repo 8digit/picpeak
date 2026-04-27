@@ -5,6 +5,30 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-04-26 (night) — Feedback Silent Failures + Full Branding Fix
+
+### Bug Fixes
+- **Guest likes/ratings not registering — 3 compounding bugs fixed (commit c80e638)**
+  - `GET /:slug/feedback-settings` in `backend/src/routes/gallery.js` was missing `require_name_email` in its response. This route is registered before the one in `galleryFeedback.js` (server.js line 488 vs 489), so it takes precedence. Missing field → identity modal never shown → API rejected submissions with 400.
+  - Name validation regex in `feedbackValidation.js` was ASCII-only (`[a-zA-Z0-9...]`). Changed to Unicode-aware (`[\p{L}\p{N}...]` with `/u` flag). Accented names (José, María, etc.) were being silently rejected.
+  - All catch blocks in `GalleryPremiumLayout` and `GalleryStoryLayout` used `console.warn` — errors were invisible to users. Replaced with `toast.error(err?.response?.data?.error || t('gallery.feedback.submitError'))`.
+- **PicPeak logo hardcoded as fallback in 5 locations — all removed (commit d425175)**
+  - `GalleryPage.tsx` password login screen: removed PicPeak `<img>` fallback; shows company name text instead when no logo configured.
+  - `HeroHeader.tsx` (top/center/bottom positions): all three logo `<div>` blocks now gated on `!!eventLogo`. When no custom logo, nothing renders.
+  - `GalleryLayout.tsx` header: `<img>` now only renders when `brandingSettings?.logo_url` is set.
+  - `GalleryLayout.tsx` hero section: same — no logo_url → no `<img>`. Also fixed `|| 'PicPeak'` fallback text.
+
+### Files Changed
+- MOD: `backend/src/routes/gallery.js` (added require_name_email to feedback-settings response)
+- MOD: `backend/src/utils/feedbackValidation.js` (Unicode-aware name regex)
+- MOD: `frontend/src/components/gallery/layouts/GalleryPremiumLayout.tsx` (toast.error in catch blocks)
+- MOD: `frontend/src/components/gallery/layouts/GalleryStoryLayout.tsx` (toast.error in catch blocks)
+- MOD: `frontend/src/pages/GalleryPage.tsx` (remove PicPeak fallback on password screen)
+- MOD: `frontend/src/components/gallery/HeroHeader.tsx` (remove PicPeak fallback, gate on !!eventLogo)
+- MOD: `frontend/src/components/gallery/GalleryLayout.tsx` (remove PicPeak fallback in header + hero)
+
+---
+
 ## 2026-04-26 (evening) — Gallery Branding in Premium & Story Layouts
 
 ### Bug Fixes

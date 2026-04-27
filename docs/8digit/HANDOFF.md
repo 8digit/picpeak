@@ -85,6 +85,8 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 12. **Pivoted guest feedback CSV export** — export now outputs one row per (photo, guest) instead of one row per action. Columns: `filename`, `guest_name`, `guest_email`, `is_favorited`, `is_liked`, `star_rating`, `comment`. Hidden feedback excluded. Booleans as `yes`/`no`.
 13. **In-app `ConfirmDialog`** — replaced 17 `window.confirm()` calls with a promise-based `useConfirm()` hook to fix browser-silenced dialogs (Publish & Notify Client, Delete Event, Delete Photo, Archive, etc.). New file: `frontend/src/components/common/ConfirmDialog.tsx`. Mount: `App.tsx`. Going forward: never use `window.confirm()` — use `useConfirm()`.
 14. **Gallery branding in Premium & Story layouts** — `GalleryPremiumLayout` and `GalleryStoryLayout` were ignoring `eventLogo` prop entirely (not destructured). Both now show the custom logo in the nav bar (white-filtered for dark nav backgrounds). Premium footer now respects `hide_powered_by` setting and shows `company_name` instead of "All rights reserved". Props `hidePoweredBy`/`companyName` threaded through `BaseGalleryLayoutProps` → `PhotoGridWithLayouts` → `GalleryView`.
+15. **Guest feedback silent-failure fixes** — Three compounding bugs blocked likes/ratings from registering: (a) `GET /:slug/feedback-settings` in `gallery.js` was missing `require_name_email` in its response, so the identity modal never appeared and the API returned 400; (b) name validation regex was ASCII-only and blocked accented characters; (c) all three `console.warn` calls in catch blocks hid errors from users. All fixed. Also: `toast.error` now shows proper error messages in Premium and Story layouts.
+16. **Branding full fix — PicPeak logo removed from all gallery surfaces** — Password-protected gallery login screen, hero header (top/center/bottom logo positions via `HeroHeader.tsx`), standard gallery header, and standard gallery hero (both in `GalleryLayout.tsx`) no longer fall back to `/picpeak-logo-transparent.png`. When no custom logo is configured, nothing renders (or company name text if set). Fully white-labels the client-facing gallery.
 
 ### Previous Changes (2026-04-15)
 9. **Gallery ZIP download fix** — replaced blob buffering with native browser downloads; fixed iOS Safari memory stall on large galleries (1GB+). Auth via `?token=` query param fallback.
@@ -100,7 +102,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 | Branding must be configured manually | Setup step | Branding page — logo, company name, colors |
 | Download All — pending real-device test | Pending | Fix deployed 2026-04-15. Needs iPhone test by Franco. |
 | Dead code: `useDownloadAllPhotos` hook | Cleanup | No longer used by GalleryView after user-gesture fix. Can remove later. |
-| Guest feedback (likes/ratings) not registering in some templates | Under investigation | Reported by users. Could be feedback not enabled in admin settings for the event. Check Admin → Event → Feedback Settings before further debugging. |
+| Guest feedback (likes/ratings) not registering in some templates | Resolved (2026-04-26) | Fixed: missing `require_name_email` in feedback-settings response + ASCII-only name regex + silent console.warn catch blocks. Commit c80e638. |
 
 ## Auth Architecture
 
