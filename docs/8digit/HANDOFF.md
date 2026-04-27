@@ -1,7 +1,7 @@
 # PicPeak — 8digit Creative Handoff Document
 
 > If you're an AI assistant starting a new conversation on this project, read this first.
-> Last updated: 2026-04-26 (evening)
+> Last updated: 2026-04-27
 
 ---
 
@@ -88,6 +88,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 15. **Guest feedback silent-failure fixes** — Three compounding bugs blocked likes/ratings from registering: (a) `GET /:slug/feedback-settings` in `gallery.js` was missing `require_name_email` in its response, so the identity modal never appeared and the API returned 400; (b) name validation regex was ASCII-only and blocked accented characters; (c) all three `console.warn` calls in catch blocks hid errors from users. All fixed. Also: `toast.error` now shows proper error messages in Premium and Story layouts.
 16. **Branding full fix — PicPeak logo removed from all gallery surfaces** — Password-protected gallery login screen, hero header (top/center/bottom logo positions via `HeroHeader.tsx`), standard gallery header, and standard gallery hero (both in `GalleryLayout.tsx`) no longer fall back to `/picpeak-logo-transparent.png`. When no custom logo is configured, nothing renders (or company name text if set). Fully white-labels the client-facing gallery.
 17. **Theme customization broken in all layouts (2026-04-27)** — Three bugs fixed: (a) Gallery Story and Gallery Premium CSS had hardcoded color schemes that ignored ThemeContext — both now bridge `--story-background/foreground/primary` and `--premium-bg/fg/accent` to ThemeContext's `--color-background/text/primary` CSS variables, with original cinematic/light fallbacks; headings use `--heading-font-family`; (b) `heroLogoVisible` prop now gates nav logo in both full-page layouts; (c) `availableEventTypes` in `CreateEventPage` was not memoized — on every render a new array reference caused the event-type `useEffect` to fire and overwrite `theme_config`, making any customization in the Create flow disappear immediately. Fixed with `useMemo([eventTypes])`. Commit: `7bdab1c`.
+18. **Draft mode preview — photos showing as black boxes (2026-04-27)** — `AuthenticatedImage` fetched photo bytes using `Authorization: Bearer <gallery_token>` but never forwarded `?preview=JWT`. Backend `verifyGalleryAccess` calls `isAdminPreview(req)` which reads `req.query.preview` — without it, `is_draft: false` was included in the WHERE clause, making every image return 404. Fix: read `?preview=` from `window.location.search` in `fetchWithAuth` and append to all image URLs. Non-preview pages have no preview param so live galleries are unaffected. Commit: `e1c8a35`.
 
 ### Previous Changes (2026-04-15)
 9. **Gallery ZIP download fix** — replaced blob buffering with native browser downloads; fixed iOS Safari memory stall on large galleries (1GB+). Auth via `?token=` query param fallback.
@@ -104,6 +105,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 | Download All — pending real-device test | Pending | Fix deployed 2026-04-15. Needs iPhone test by Franco. |
 | Dead code: `useDownloadAllPhotos` hook | Cleanup | No longer used by GalleryView after user-gesture fix. Can remove later. |
 | Guest feedback (likes/ratings) not registering in some templates | Resolved (2026-04-26) | Fixed: missing `require_name_email` in feedback-settings response + ASCII-only name regex + silent console.warn catch blocks. Commit c80e638. |
+| Draft mode preview shows black image boxes | Resolved (2026-04-27) | AuthenticatedImage wasn't forwarding ?preview=JWT to image fetches — verifyGalleryAccess blocked draft events. Fixed in AuthenticatedImage.tsx. Commit e1c8a35. |
 
 ## Auth Architecture
 

@@ -5,6 +5,18 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-04-27 — Draft Preview Black Images
+
+### Bug Fixes
+- **Admin draft gallery preview showed black image boxes (commit e1c8a35)**
+  - Root cause: `AuthenticatedImage` fetched photo bytes using `Authorization: Bearer <gallery_token>` but never appended `?preview=JWT` to the image URL. The backend `verifyGalleryAccess` middleware calls `isAdminPreview(req)` which reads `req.query.preview` — without the param, it returned false, so `is_draft: false` was included in the WHERE clause, making every photo/thumbnail/hero image return 404. Gallery metadata (photo count, categories) loaded fine because `gallery.service.ts` uses Axios with `getPreviewParam()` which does forward the preview token — only `AuthenticatedImage` was missing it.
+  - Fix: In `AuthenticatedImage.fetchWithAuth`, read `?preview=` from `window.location.search` (same source as `getPreviewParam()` in `gallery.service.ts`) and append it to the fetch URL. Non-preview gallery pages have no preview param in the URL, so live galleries are unaffected.
+
+### Files Changed
+- MOD: `frontend/src/components/common/AuthenticatedImage.tsx` (forward ?preview= param in fetchWithAuth)
+
+---
+
 ## 2026-04-27 — Theme Customization Broken in All Layouts
 
 ### Bug Fixes
