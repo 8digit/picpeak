@@ -66,6 +66,9 @@ interface PhotoGridWithLayoutsProps {
   heroImageAnchor?: string;
   // Logout callback for full-page layouts
   onLogout?: () => void;
+  // Branding overrides for full-page layouts
+  hidePoweredBy?: boolean;
+  companyName?: string;
 }
 
 export const PhotoGridWithLayouts: React.FC<PhotoGridWithLayoutsProps> = ({
@@ -97,7 +100,9 @@ export const PhotoGridWithLayouts: React.FC<PhotoGridWithLayoutsProps> = ({
   headerStyle,
   heroDividerStyle = 'wave',
   heroImageAnchor = 'center',
-  onLogout
+  onLogout,
+  hidePoweredBy,
+  companyName,
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
@@ -227,6 +232,8 @@ export const PhotoGridWithLayouts: React.FC<PhotoGridWithLayoutsProps> = ({
     heroLogoSize,
     heroLogoPosition,
     onLogout,
+    hidePoweredBy,
+    companyName,
   };
 
   // Determine if we should show hero header (decoupled from layout)

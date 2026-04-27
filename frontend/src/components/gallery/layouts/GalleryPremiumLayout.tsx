@@ -168,6 +168,7 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
   onSelectAll,
   onDeselectAll,
   eventName,
+  eventLogo,
   eventDate,
   allowDownloads = true,
   protectionLevel = 'standard',
@@ -176,7 +177,9 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
   feedbackEnabled = false,
   feedbackOptions,
   heroPhotoOverride,
-  onLogout
+  onLogout,
+  hidePoweredBy = false,
+  companyName,
 }) => {
   // These props are passed by parent but we use our own lightbox, so mark as intentionally unused
   void _onPhotoClick;
@@ -387,7 +390,11 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
           </div>
 
           <div className="gallery-premium-nav-title">
-            {eventName ? eventName.split(' ').map(w => w[0]).join('').slice(0, 3) : 'Gallery'}
+            {eventLogo ? (
+              <img src={eventLogo} alt={eventName || 'Gallery'} className="gallery-premium-nav-logo-img" />
+            ) : (
+              eventName ? eventName.split(' ').map(w => w[0]).join('').slice(0, 3) : 'Gallery'
+            )}
           </div>
 
           <div className="gallery-premium-nav-actions">
@@ -494,8 +501,8 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
 
       {/* Footer */}
       <footer className="gallery-premium-footer">
-        <p>{t('gallery.poweredBy', 'Powered by PicPeak')}</p>
-        <p>© {new Date().getFullYear()} {t('gallery.allRightsReserved', 'All rights reserved')}</p>
+        {!hidePoweredBy && <p>{t('gallery.poweredBy', 'Powered by PicPeak')}</p>}
+        <p>© {new Date().getFullYear()} {companyName || t('gallery.allRightsReserved', 'All rights reserved')}</p>
       </footer>
 
       {/* Lightbox */}

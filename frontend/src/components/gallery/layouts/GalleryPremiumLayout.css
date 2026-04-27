@@ -147,6 +147,13 @@
   font-size: 1.125rem;
 }
 
+.gallery-premium-nav-logo-img {
+  max-height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
 @media (min-width: 768px) {
   .gallery-premium-nav-title {
     display: none;

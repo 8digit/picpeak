@@ -47,6 +47,7 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
   isSelectionMode: _isSelectionMode,
   onPhotoSelect: _onPhotoSelect,
   eventName,
+  eventLogo,
   eventDate,
   allowDownloads = true,
   protectionLevel = 'standard',
@@ -243,9 +244,13 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
 
       {/* Navigation Overlay */}
       <nav className={`story-nav ${scrolled ? 'scrolled' : ''}`}>
-        <span className="story-nav-logo">
-          {eventName ? eventName.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase() : 'GALLERY'}
-        </span>
+        {eventLogo ? (
+          <img src={eventLogo} alt={eventName || 'Gallery'} className="story-nav-logo-img" />
+        ) : (
+          <span className="story-nav-logo">
+            {eventName ? eventName.split(' ').map(w => w[0]).join('').slice(0, 3).toUpperCase() : 'GALLERY'}
+          </span>
+        )}
 
         <div className="story-nav-actions">
           <div className="story-nav-search">

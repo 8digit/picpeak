@@ -33,6 +33,9 @@ export interface BaseGalleryLayoutProps {
   };
   // Logout callback for full-page layouts
   onLogout?: () => void;
+  // Branding overrides for full-page layouts
+  hidePoweredBy?: boolean;
+  companyName?: string;
 }
 
 export abstract class BaseGalleryLayout<T extends BaseGalleryLayoutProps = BaseGalleryLayoutProps> extends React.Component<T> {

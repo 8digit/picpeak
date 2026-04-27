@@ -666,6 +666,8 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
           heroDividerStyle={data?.event?.hero_divider_style || theme.heroDividerStyle || 'wave'}
           heroImageAnchor={data?.event?.hero_image_anchor || 'center'}
           onLogout={logout}
+          hidePoweredBy={brandingSettings?.hide_powered_by}
+          companyName={brandingSettings?.company_name}
         />
 
         {/* Upload Modal for full-page layouts */}
@@ -840,6 +842,8 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
             headerStyle={data?.event?.header_style || theme.headerStyle}
             heroDividerStyle={data?.event?.hero_divider_style || theme.heroDividerStyle || 'wave'}
             heroImageAnchor={data?.event?.hero_image_anchor || 'center'}
+            hidePoweredBy={brandingSettings?.hide_powered_by}
+            companyName={brandingSettings?.company_name}
           />
         </div>
 

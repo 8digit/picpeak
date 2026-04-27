@@ -77,6 +77,13 @@
   letter-spacing: 0.25em;
 }
 
+.story-nav-logo-img {
+  max-height: 36px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
 .story-nav-actions {
   display: flex;
   align-items: center;
