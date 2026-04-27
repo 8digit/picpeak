@@ -151,7 +151,14 @@ export const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const response = await fetch(fullImageUrl, {
+      const previewToken = new URLSearchParams(window.location.search).get('preview');
+      let urlToFetch = fullImageUrl;
+      if (previewToken) {
+        const sep = fullImageUrl.includes('?') ? '&' : '?';
+        urlToFetch = `${fullImageUrl}${sep}preview=${encodeURIComponent(previewToken)}`;
+      }
+
+      const response = await fetch(urlToFetch, {
         credentials: 'include',
         headers: Object.keys(headers).length ? headers : undefined,
       });
