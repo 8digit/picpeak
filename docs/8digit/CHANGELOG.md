@@ -5,6 +5,29 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-04-27 — Theme Customization Broken in All Layouts
+
+### Bug Fixes
+- **Gallery Story and Gallery Premium layouts ignored all ThemeContext colors/fonts (commit 7bdab1c)**
+  - Root cause: Both CSS files had hardcoded color schemes (Story: `#0d0d0d`/`#c9a961` dark cinematic; Premium: `#ffffff`/`#18181b` light). Neither referenced ThemeContext CSS variables (`--color-background`, `--color-text`, `--color-primary`).
+  - Fix (Story): `--story-background`, `--story-foreground`, `--story-primary`, `--story-primary-foreground` now use `var(--color-background, ...)` etc. as their values. All 4 Playfair Display occurrences use `var(--heading-font-family, 'Playfair Display')`. Base `font-family` uses `var(--font-family, 'Inter')`.
+  - Fix (Premium): Introduced `--premium-bg`, `--premium-fg`, `--premium-accent` CSS variables bridging ThemeContext vars. Root element, nav category active states, download button, and checkbox use these variables. Hero title and nav title use `var(--heading-font-family, 'Playfair Display')`.
+- **heroLogoVisible not respected in Story/Premium nav (commit 7bdab1c)**
+  - Root cause: Both full-page layouts showed the event logo in their nav bars regardless of the `heroLogoVisible` event setting.
+  - Fix: Nav logo in both layouts now gated on `heroLogoVisible && eventLogo`.
+- **Theme customization wiped on every keypress in CreateEventPage (commit 7bdab1c)**
+  - Root cause: `availableEventTypes` was computed inline on every render (not memoized). Since it's a dependency of the event-type `useEffect`, that effect fired on every render — overwriting `theme_preset` and `theme_config` back to the event-type default. This made every color picker drag, input change, or any state update destroy the user's theme selections instantly.
+  - Fix: `availableEventTypes` wrapped in `useMemo([eventTypes])`. Effect now only fires when the user actually changes the event type or when the API data first loads.
+
+### Files Changed
+- MOD: `frontend/src/components/gallery/layouts/GalleryStoryLayout.css` (CSS variable bridging to ThemeContext, font vars)
+- MOD: `frontend/src/components/gallery/layouts/GalleryStoryLayout.tsx` (heroLogoVisible prop + nav logo gate)
+- MOD: `frontend/src/components/gallery/layouts/GalleryPremiumLayout.css` (--premium-* CSS variables, font vars)
+- MOD: `frontend/src/components/gallery/layouts/GalleryPremiumLayout.tsx` (heroLogoVisible prop + nav logo gate)
+- MOD: `frontend/src/pages/admin/CreateEventPage.tsx` (useMemo for availableEventTypes)
+
+---
+
 ## 2026-04-26 (night) — Feedback Silent Failures + Full Branding Fix
 
 ### Bug Fixes
