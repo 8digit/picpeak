@@ -5,6 +5,28 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-04-26 (evening) — Gallery Branding in Premium & Story Layouts
+
+### Bug Fixes
+- **Custom logo not shown in Premium/Story gallery nav bars**
+  - Root cause: `GalleryPremiumLayout` and `GalleryStoryLayout` did not destructure `eventLogo` from `BaseGalleryLayoutProps`. The prop was being passed through `layoutProps` in `PhotoGridWithLayouts` but silently dropped.
+  - Fix: Both layouts now destructure `eventLogo`. When set, nav renders `<img>` instead of text initials. Logo uses `filter: brightness(0) invert(1)` for visibility on dark nav backgrounds.
+- **Premium layout footer always showed "Powered by PicPeak"**
+  - Fix: Footer respects `hide_powered_by` branding setting. Copyright line uses `company_name` when configured.
+- **`hidePoweredBy` and `companyName` not reachable by full-page layouts**
+  - Fix: Added both props to `BaseGalleryLayoutProps`, `PhotoGridWithLayouts`, and both branches of `GalleryView` (full-page and regular).
+
+### Files Changed
+- MOD: `frontend/src/components/gallery/layouts/BaseGalleryLayout.tsx` (added hidePoweredBy, companyName)
+- MOD: `frontend/src/components/gallery/PhotoGridWithLayouts.tsx` (accept + pass new props in layoutProps)
+- MOD: `frontend/src/components/gallery/GalleryView.tsx` (pass hidePoweredBy + companyName in both render paths)
+- MOD: `frontend/src/components/gallery/layouts/GalleryPremiumLayout.tsx` (use eventLogo in nav, hidePoweredBy + companyName in footer)
+- MOD: `frontend/src/components/gallery/layouts/GalleryPremiumLayout.css` (.gallery-premium-nav-logo-img)
+- MOD: `frontend/src/components/gallery/layouts/GalleryStoryLayout.tsx` (use eventLogo in nav)
+- MOD: `frontend/src/components/gallery/layouts/GalleryStoryLayout.css` (.story-nav-logo-img)
+
+---
+
 ## 2026-04-26 — In-App Confirmation Dialogs
 
 ### Bug Fixes

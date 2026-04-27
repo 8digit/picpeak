@@ -1,7 +1,7 @@
 # PicPeak — 8digit Creative Handoff Document
 
 > If you're an AI assistant starting a new conversation on this project, read this first.
-> Last updated: 2026-04-26
+> Last updated: 2026-04-26 (evening)
 
 ---
 
@@ -84,6 +84,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 ### Recent Changes (2026-04-26)
 12. **Pivoted guest feedback CSV export** — export now outputs one row per (photo, guest) instead of one row per action. Columns: `filename`, `guest_name`, `guest_email`, `is_favorited`, `is_liked`, `star_rating`, `comment`. Hidden feedback excluded. Booleans as `yes`/`no`.
 13. **In-app `ConfirmDialog`** — replaced 17 `window.confirm()` calls with a promise-based `useConfirm()` hook to fix browser-silenced dialogs (Publish & Notify Client, Delete Event, Delete Photo, Archive, etc.). New file: `frontend/src/components/common/ConfirmDialog.tsx`. Mount: `App.tsx`. Going forward: never use `window.confirm()` — use `useConfirm()`.
+14. **Gallery branding in Premium & Story layouts** — `GalleryPremiumLayout` and `GalleryStoryLayout` were ignoring `eventLogo` prop entirely (not destructured). Both now show the custom logo in the nav bar (white-filtered for dark nav backgrounds). Premium footer now respects `hide_powered_by` setting and shows `company_name` instead of "All rights reserved". Props `hidePoweredBy`/`companyName` threaded through `BaseGalleryLayoutProps` → `PhotoGridWithLayouts` → `GalleryView`.
 
 ### Previous Changes (2026-04-15)
 9. **Gallery ZIP download fix** — replaced blob buffering with native browser downloads; fixed iOS Safari memory stall on large galleries (1GB+). Auth via `?token=` query param fallback.
@@ -99,6 +100,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 | Branding must be configured manually | Setup step | Branding page — logo, company name, colors |
 | Download All — pending real-device test | Pending | Fix deployed 2026-04-15. Needs iPhone test by Franco. |
 | Dead code: `useDownloadAllPhotos` hook | Cleanup | No longer used by GalleryView after user-gesture fix. Can remove later. |
+| Guest feedback (likes/ratings) not registering in some templates | Under investigation | Reported by users. Could be feedback not enabled in admin settings for the event. Check Admin → Event → Feedback Settings before further debugging. |
 
 ## Auth Architecture
 
