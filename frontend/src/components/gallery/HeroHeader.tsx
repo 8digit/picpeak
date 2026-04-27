@@ -161,20 +161,13 @@ export const HeroHeader: React.FC<HeroHeaderProps> = ({
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-4">
             {/* Logo at top position */}
-            {heroLogoVisible && heroLogoPosition === 'top' && (
+            {heroLogoVisible && heroLogoPosition === 'top' && !!eventLogo && (
               <div className="mb-6">
                 <img
-                  src={eventLogo ?
-                    buildResourceUrl(eventLogo) :
-                    '/picpeak-logo-transparent.png'
-                  }
+                  src={buildResourceUrl(eventLogo)}
                   alt="Event logo"
                   className={`${getLogoSizeClasses(heroLogoSize)} mx-auto`}
-                  style={{
-                    filter: eventLogo
-                      ? 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-                      : 'brightness(0) invert(1) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-                  }}
+                  style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))' }}
                 />
               </div>
             )}
@@ -187,20 +180,13 @@ export const HeroHeader: React.FC<HeroHeaderProps> = ({
             )}
 
             {/* Logo at center position (between title and dates) */}
-            {heroLogoVisible && heroLogoPosition === 'center' && (
+            {heroLogoVisible && heroLogoPosition === 'center' && !!eventLogo && (
               <div className="my-6">
                 <img
-                  src={eventLogo ?
-                    buildResourceUrl(eventLogo) :
-                    '/picpeak-logo-transparent.png'
-                  }
+                  src={buildResourceUrl(eventLogo)}
                   alt="Event logo"
                   className={`${getLogoSizeClasses(heroLogoSize)} mx-auto`}
-                  style={{
-                    filter: eventLogo
-                      ? 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-                      : 'brightness(0) invert(1) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-                  }}
+                  style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))' }}
                 />
               </div>
             )}
@@ -224,20 +210,13 @@ export const HeroHeader: React.FC<HeroHeaderProps> = ({
             )}
 
             {/* Logo at bottom position */}
-            {heroLogoVisible && heroLogoPosition === 'bottom' && (
+            {heroLogoVisible && heroLogoPosition === 'bottom' && !!eventLogo && (
               <div className="mt-6">
                 <img
-                  src={eventLogo ?
-                    buildResourceUrl(eventLogo) :
-                    '/picpeak-logo-transparent.png'
-                  }
+                  src={buildResourceUrl(eventLogo)}
                   alt="Event logo"
                   className={`${getLogoSizeClasses(heroLogoSize)} mx-auto`}
-                  style={{
-                    filter: eventLogo
-                      ? 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-                      : 'brightness(0) invert(1) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))'
-                  }}
+                  style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))' }}
                 />
               </div>
             )}

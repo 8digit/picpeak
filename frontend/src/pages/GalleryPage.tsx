@@ -446,14 +446,18 @@ export const GalleryPage: React.FC = () => {
         <div className="w-full max-w-lg">
           {/* Logo/Header */}
           <div className="text-center mb-4 sm:mb-6">
-            <img 
-              src={settingsData?.branding_logo_url ? 
-                buildResourceUrl(settingsData.branding_logo_url) : 
-                '/picpeak-logo-transparent.png'
-              } 
-              alt={settingsData?.branding_company_name || 'PicPeak'}
-              className="h-12 sm:h-16 lg:h-20 w-auto object-contain mx-auto mb-3 sm:mb-4"
-            />
+            {settingsData?.branding_logo_url && (
+              <img
+                src={buildResourceUrl(settingsData.branding_logo_url)}
+                alt={settingsData?.branding_company_name || ''}
+                className="h-12 sm:h-16 lg:h-20 w-auto object-contain mx-auto mb-3 sm:mb-4"
+              />
+            )}
+            {!settingsData?.branding_logo_url && settingsData?.branding_company_name && (
+              <p className="text-lg font-semibold text-theme mb-3 sm:mb-4">
+                {settingsData.branding_company_name}
+              </p>
+            )}
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 px-2" style={{ color: 'var(--color-primary, #5C8762)' }}>
               {galleryInfo?.event_name}
             </h1>

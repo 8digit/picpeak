@@ -193,18 +193,17 @@ export const GalleryLayout: React.FC<GalleryLayoutProps> = ({
                   </div>
                 )}
                 
-                {/* Logo - Show custom logo or fallback to PicPeak logo */}
+                {/* Logo - Show custom logo only if configured */}
                 {shouldShowLogo('header') && (
                   <div className={`gallery-logo-wrapper flex-shrink-0 flex items-center gap-2 ${brandingSettings?.logo_position === 'center' ? 'flex-1' : ''} ${getLogoPositionClass()}`}>
+                    {brandingSettings?.logo_url && (
                     <img
-                      src={brandingSettings?.logo_url ?
-                        buildResourceUrl(brandingSettings.logo_url) :
-                        '/picpeak-logo-transparent.png'
-                      }
-                      alt={brandingSettings?.company_name || 'PicPeak'}
+                      src={buildResourceUrl(brandingSettings.logo_url)}
+                      alt={brandingSettings?.company_name || ''}
                       className={`gallery-logo ${headerLogoSize.className} w-auto object-contain`}
                       style={headerLogoSize.style}
                     />
+                    )}
                     {shouldShowCompanyName() && brandingSettings?.company_name && (
                       <span className="hidden sm:inline text-lg font-semibold text-theme">
                         {brandingSettings.company_name}
@@ -488,22 +487,16 @@ export const GalleryLayout: React.FC<GalleryLayoutProps> = ({
         >
           <div className="container py-12 sm:py-16 lg:py-20 relative z-10">
             <div className="text-center max-w-4xl mx-auto">
-              {/* Logo - Show custom logo or fallback to PicPeak logo */}
-              {shouldShowLogo('hero') && (
+              {/* Logo - Show custom logo only if configured */}
+              {shouldShowLogo('hero') && brandingSettings?.logo_url && (
                 <div className="mb-6">
-                  <img 
-                    src={brandingSettings?.logo_url ? 
-                      buildResourceUrl(brandingSettings.logo_url) : 
-                      '/picpeak-logo-transparent.png'
-                    } 
-                    alt={brandingSettings?.company_name || 'PicPeak'}
+                  <img
+                    src={buildResourceUrl(brandingSettings.logo_url)}
+                    alt={brandingSettings?.company_name || ''}
                     className={`${heroLogoSize.className} w-auto object-contain mx-auto`}
                     style={{
                       ...(heroLogoSize.style || {}),
-                      // Only apply brightness/invert filter to default logo; custom logos display as-is
-                      filter: brandingSettings?.logo_url
-                        ? 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
-                        : 'brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+                      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
                     }}
                   />
                   {shouldShowCompanyName() && brandingSettings?.company_name && (
@@ -513,9 +506,9 @@ export const GalleryLayout: React.FC<GalleryLayoutProps> = ({
                   )}
                 </div>
               )}
-              {!shouldShowLogo('hero') && shouldShowCompanyName() && brandingSettings?.company_name && (
+              {(!shouldShowLogo('hero') || !brandingSettings?.logo_url) && shouldShowCompanyName() && brandingSettings?.company_name && (
                 <div className="mb-6 text-2xl sm:text-3xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>
-                  {brandingSettings.company_name || 'PicPeak'}
+                  {brandingSettings.company_name}
                 </div>
               )}
               
