@@ -260,10 +260,10 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
         guest_email: savedIdentity?.email,
       });
       onFeedbackChange?.();
-    } catch (err) {
-      console.warn('Like submit failed', err);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || t('gallery.feedback.submitError', 'Could not save your feedback'));
     }
-  }, [slug, savedIdentity, feedbackOptions, onFeedbackChange]);
+  }, [slug, savedIdentity, feedbackOptions, onFeedbackChange, t]);
 
   const handleIdentitySubmit = useCallback(async (name: string, email: string) => {
     setSavedIdentity({ name, email });
@@ -283,12 +283,12 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
           guest_email: email,
         });
         onFeedbackChange?.();
-      } catch (err) {
-        console.warn('Like submit failed', err);
+      } catch (err: any) {
+        toast.error(err?.response?.data?.error || t('gallery.feedback.submitError', 'Could not save your feedback'));
       }
       setPendingLikePhotoId(null);
     }
-  }, [slug, pendingLikePhotoId, onFeedbackChange]);
+  }, [slug, pendingLikePhotoId, onFeedbackChange, t]);
 
   const handleSelectAll = useCallback(() => {
     if (selectedPhotos.size === filteredPhotos.length) {

@@ -152,8 +152,8 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
           guest_email: savedIdentity?.email,
         });
         onFeedbackChange?.();
-      } catch (err) {
-        console.warn('Like submit failed', err);
+      } catch (err: any) {
+        toast.error(err?.response?.data?.error || t('gallery.feedback.submitError', 'Could not save your feedback'));
       }
     }
   }, [favorites, slug, savedIdentity, onFeedbackChange]);
@@ -193,8 +193,8 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
         guest_email: email || savedIdentity?.email,
       });
       onFeedbackChange?.();
-    } catch (err) {
-      console.warn('Comment submit failed', err);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || t('gallery.feedback.submitError', 'Could not save your feedback'));
     }
   }, [selectedPhotoForFeedback, slug, savedIdentity, onFeedbackChange, t]);
 
@@ -214,10 +214,10 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
         guest_email: savedIdentity?.email,
       });
       onFeedbackChange?.();
-    } catch (err) {
-      console.warn('Rating submit failed', err);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || t('gallery.feedback.submitError', 'Could not save your feedback'));
     }
-  }, [selectedPhotoForFeedback, slug, savedIdentity, onFeedbackChange]);
+  }, [selectedPhotoForFeedback, slug, savedIdentity, onFeedbackChange, t]);
 
   const handleDownloadAll = useCallback(async () => {
     toast.info(t('gallery.downloading', { count: photos.length }));

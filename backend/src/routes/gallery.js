@@ -1108,9 +1108,10 @@ router.get('/:slug/feedback-settings', verifyGalleryAccess, async (req, res) => 
     res.json({
       feedback_enabled: settings.feedback_enabled || false,
       allow_ratings: settings.allow_ratings,
-      allow_likes: settings.allow_likes, 
+      allow_likes: settings.allow_likes,
       allow_comments: settings.allow_comments,
       allow_favorites: settings.allow_favorites,
+      require_name_email: settings.require_name_email,
       show_feedback_to_guests: settings.show_feedback_to_guests
     });
   } catch (error) {
