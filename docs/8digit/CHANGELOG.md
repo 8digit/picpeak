@@ -5,6 +5,39 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-05-27 — Per-Category Download Permissions (All Layouts Fixed)
+
+### Features
+- **Per-category download permissions (commits 928164b + 751ec75)**
+  - New `allow_downloads` column on `photo_categories` (migration 075, DEFAULT true — fully backward compatible)
+  - Admin → Settings → Categories: each category now has a Download toggle (green = allowed, red = blocked)
+  - Backend enforces at every download surface: single photo, download-all ZIP, download-selected ZIP, and secure image endpoint
+  - All 7 gallery layout components now respect `photo.category_allow_downloads` per-photo:
+    - GridGalleryLayout, MasonryGalleryLayout, MosaicGalleryLayout, TimelineGalleryLayout
+    - CarouselGalleryLayout, GalleryPremiumLayout, GalleryStoryLayout
+  - Event-level `allow_downloads` remains the master switch; per-category is a second layer
+
+### Files Changed
+- NEW: `backend/migrations/core/075_add_category_allow_downloads.js`
+- MOD: `backend/src/routes/adminCategories.js` (PUT /:id accepts `allow_downloads`)
+- MOD: `backend/src/routes/gallery.js` (category SELECT, photo map, download-all, download-selected, single download)
+- MOD: `backend/src/routes/secureImages.js` (category check before serving secure URL)
+- MOD: `frontend/src/types/index.ts` (`Photo.category_allow_downloads`, `PhotoCategory.allow_downloads`)
+- MOD: `frontend/src/services/categories.service.ts` (`updateCategory` passes `allow_downloads`)
+- MOD: `frontend/src/components/admin/CategoryManager.tsx` (per-row Download toggle)
+- MOD: `frontend/src/components/gallery/GalleryView.tsx` (helper)
+- MOD: `frontend/src/components/gallery/PhotoGrid.tsx` (per-photo allowDownloads)
+- MOD: `frontend/src/components/gallery/PhotoLightbox.tsx` (effectiveAllowDownloads)
+- MOD: `frontend/src/components/gallery/layouts/MasonryGalleryLayout.tsx`
+- MOD: `frontend/src/components/gallery/layouts/GridGalleryLayout.tsx`
+- MOD: `frontend/src/components/gallery/layouts/MosaicGalleryLayout.tsx`
+- MOD: `frontend/src/components/gallery/layouts/TimelineGalleryLayout.tsx`
+- MOD: `frontend/src/components/gallery/layouts/CarouselGalleryLayout.tsx`
+- MOD: `frontend/src/components/gallery/layouts/GalleryPremiumLayout.tsx`
+- MOD: `frontend/src/components/gallery/layouts/GalleryStoryLayout.tsx`
+
+---
+
 ## 2026-04-27 — Draft Preview Black Images
 
 ### Bug Fixes
