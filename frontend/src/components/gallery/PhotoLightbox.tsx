@@ -77,7 +77,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   
   const downloadPhotoMutation = useDownloadPhoto();
   const currentPhoto = photos[currentIndex];
-  
+
+  // Effective per-photo download flag: event setting AND category setting
+  const effectiveAllowDownloads = allowDownloads && currentPhoto?.category_allow_downloads !== false;
+
   // DevTools protection - enabled by individual setting OR legacy protection level
   const devToolsEnabled = enableDevtoolsProtection || (useEnhancedProtection && (protectionLevel === 'enhanced' || protectionLevel === 'maximum'));
 
@@ -142,7 +145,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           break;
         case 'd':
         case 'D':
-          if (allowDownloads) {
+          if (effectiveAllowDownloads) {
             handleDownload();
           }
           break;
@@ -270,7 +273,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   };
 
   const handleDownload = () => {
-    if (!allowDownloads) return;
+    if (!effectiveAllowDownloads) return;
     downloadPhotoMutation.mutate({
       slug,
       photoId: currentPhoto.id,
@@ -413,7 +416,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             
             <div className="w-px h-6 bg-white/20 mx-2" />
             
-            {allowDownloads && (
+            {effectiveAllowDownloads && (
               <button
                 onClick={handleDownload}
                 className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
@@ -529,7 +532,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             photoId={currentPhoto.id}
             requiresToken={currentPhoto.requires_token}
             secureUrlTemplate={currentPhoto.secure_url_template}
-            protectFromDownload={!allowDownloads || useEnhancedProtection}
+            protectFromDownload={!effectiveAllowDownloads || useEnhancedProtection}
             protectionLevel={protectionLevel}
             useEnhancedProtection={useEnhancedProtection}
             useCanvasRendering={useCanvasRendering || protectionLevel === 'maximum'}

@@ -441,6 +441,10 @@ export const GalleryView: React.FC<GalleryViewProps> = ({ slug, event }) => {
   // Check if downloads are allowed (both event setting and not expired)
   const allowDownloads = !isExpired && (data?.event?.allow_downloads === true);
 
+  // Per-photo download check: also gates on the photo's category allow_downloads flag
+  const isPhotoDownloadAllowed = (photo: { category_allow_downloads?: boolean }): boolean =>
+    allowDownloads && photo.category_allow_downloads !== false;
+
   const handleDownloadAll = () => {
     // Prevent downloads if gallery is expired or downloads disabled
     if (!allowDownloads) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { categoriesService, type PhotoCategory } from '../../services/categories.service';
@@ -45,6 +45,18 @@ export const CategoryManager: React.FC = () => {
       toast.success(t('toast.categoryUpdated'));
       setEditingId(null);
       setEditingName('');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || t('toast.saveError'));
+    },
+  });
+
+  // Toggle allow_downloads mutation
+  const toggleDownloadsMutation = useMutation({
+    mutationFn: ({ id, name, allowDownloads }: { id: number; name: string; allowDownloads: boolean }) =>
+      categoriesService.updateCategory(id, name, allowDownloads),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['global-categories'] });
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || t('toast.saveError'));
@@ -208,7 +220,27 @@ export const CategoryManager: React.FC = () => {
                     <p className="font-medium text-neutral-900 dark:text-neutral-100">{category.name}</p>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">/{category.slug}</p>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-1">
+                    {/* Downloads toggle */}
+                    <button
+                      onClick={() =>
+                        toggleDownloadsMutation.mutate({
+                          id: category.id as number,
+                          name: category.name,
+                          allowDownloads: category.allow_downloads === false ? true : false,
+                        })
+                      }
+                      disabled={toggleDownloadsMutation.isPending}
+                      title={category.allow_downloads === false ? 'Downloads disabled — click to enable' : 'Downloads enabled — click to disable'}
+                      className={[
+                        'p-1.5 rounded transition-colors',
+                        category.allow_downloads === false
+                          ? 'text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40'
+                          : 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30',
+                      ].join(' ')}
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => startEdit(category)}
                       className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded transition-colors"

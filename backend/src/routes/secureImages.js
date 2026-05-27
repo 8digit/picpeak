@@ -292,6 +292,14 @@ router.get('/:slug/secure-download/:photoId/:token',
         return res.status(404).json({ error: 'Photo not found' });
       }
 
+      // Check category-level download permission
+      if (photo.category_id) {
+        const cat = await db('photo_categories').where('id', photo.category_id).first();
+        if (cat && cat.allow_downloads === false) {
+          return res.status(403).json({ error: 'Downloads are disabled for this category' });
+        }
+      }
+
       let filePath;
       try {
         filePath = resolvePhotoFilePath(req.event, photo);

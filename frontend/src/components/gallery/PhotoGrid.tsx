@@ -193,7 +193,7 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
             isSelectionMode={isSelectionMode}
             onClick={(e) => handlePhotoClick(index, e)}
             onDownload={(e) => handleDownload(photo, e)}
-            allowDownloads={allowDownloads}
+            allowDownloads={allowDownloads && photo.category_allow_downloads !== false}
             protectionLevel={protectionLevel}
             useEnhancedProtection={useEnhancedProtection}
             useCanvasRendering={useCanvasRendering}

@@ -7,6 +7,7 @@ export interface PhotoCategory {
   is_global: boolean;
   event_id: number | null;
   hero_photo_id?: number | null;
+  allow_downloads?: boolean;
   created_at: string;
 }
 
@@ -37,8 +38,12 @@ export const categoriesService = {
   },
 
   // Update a category
-  async updateCategory(id: number, name: string): Promise<PhotoCategory> {
-    const response = await api.put<PhotoCategory>(`/admin/categories/${id}`, { name });
+  async updateCategory(id: number, name: string, allowDownloads?: boolean): Promise<PhotoCategory> {
+    const body: Record<string, unknown> = { name };
+    if (allowDownloads !== undefined) {
+      body.allow_downloads = allowDownloads;
+    }
+    const response = await api.put<PhotoCategory>(`/admin/categories/${id}`, body);
     return response.data;
   },
 

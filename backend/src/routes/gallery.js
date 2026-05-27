@@ -338,7 +338,7 @@ router.get('/:slug/photos', verifyGalleryAccess, async (req, res) => {
     if (usedCategoryIds.length > 0) {
       const categoryDetails = await db('photo_categories')
         .whereIn('id', usedCategoryIds)
-        .select('id', 'name', 'slug', 'is_global', 'hero_photo_id')
+        .select('id', 'name', 'slug', 'is_global', 'hero_photo_id', 'allow_downloads')
         .orderBy('name', 'asc');
 
       categories = categoryDetails.map(cat => ({
@@ -346,7 +346,8 @@ router.get('/:slug/photos', verifyGalleryAccess, async (req, res) => {
         name: cat.name,
         slug: cat.slug,
         is_global: cat.is_global,
-        hero_photo_id: cat.hero_photo_id || null
+        hero_photo_id: cat.hero_photo_id || null,
+        allow_downloads: cat.allow_downloads !== false
       }));
     }
 
@@ -422,6 +423,7 @@ router.get('/:slug/photos', verifyGalleryAccess, async (req, res) => {
           category_id: photo.category_id || null,
           category_name: photo.category_id && categoryMap[photo.category_id] ? categoryMap[photo.category_id].name : null,
           category_slug: photo.category_id && categoryMap[photo.category_id] ? categoryMap[photo.category_id].slug : null,
+          category_allow_downloads: photo.category_id && categoryMap[photo.category_id] ? categoryMap[photo.category_id].allow_downloads : true,
           size: photo.size_bytes,
           uploaded_at: photo.uploaded_at,
           // Image dimensions for layout calculations
@@ -457,11 +459,19 @@ router.get('/:slug/download/:photoId', verifyGalleryAccess, async (req, res) => 
     const photo = await db('photos')
       .where({ id: photoId, event_id: req.event.id })
       .first();
-    
+
     if (!photo) {
       return res.status(404).json({ error: 'Photo not found' });
     }
-    
+
+    // Check category-level download permission
+    if (photo.category_id) {
+      const cat = await db('photo_categories').where('id', photo.category_id).first();
+      if (cat && cat.allow_downloads === false) {
+        return res.status(403).json({ error: 'Downloads are disabled for this category' });
+      }
+    }
+
     // Update download count
     await db('photos').where('id', photoId).increment('download_count', 1);
     
@@ -541,17 +551,22 @@ router.get('/:slug/download-all', verifyGalleryAccess, async (req, res) => {
       return res.status(403).json({ error: 'Downloads are disabled for this gallery' });
     }
     
-    // Fetch photos
+    // Fetch photos — exclude photos from categories where allow_downloads = false
     const photos = await db('photos')
+      .leftJoin('photo_categories', 'photos.category_id', 'photo_categories.id')
       .where('photos.event_id', req.event.id)
+      .where(function () {
+        this.whereNull('photos.category_id')
+          .orWhere('photo_categories.allow_downloads', true);
+      })
       .select('photos.*')
       .orderBy('photos.type', 'asc')
       .orderBy('photos.uploaded_at', 'desc');
-    
+
     if (photos.length === 0) {
       return res.status(404).json({ error: 'No photos found' });
     }
-    
+
     // Count unique types
     const uniqueTypes = new Set(photos.map(p => p.type)).size;
     const hasMultipleTypes = uniqueTypes > 1;
@@ -661,10 +676,15 @@ router.post('/:slug/download-selected', verifyGalleryAccess, async (req, res) =>
       return res.status(400).json({ error: 'No valid photo IDs provided' });
     }
 
-    // Fetch photos
+    // Fetch photos — exclude photos from categories where allow_downloads = false
     const photos = await db('photos')
+      .leftJoin('photo_categories', 'photos.category_id', 'photo_categories.id')
       .where('photos.event_id', req.event.id)
       .whereIn('photos.id', photoIds)
+      .where(function () {
+        this.whereNull('photos.category_id')
+          .orWhere('photo_categories.allow_downloads', true);
+      })
       .select('photos.*')
       .orderBy('photos.uploaded_at', 'desc');
 

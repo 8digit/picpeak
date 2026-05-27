@@ -80,6 +80,7 @@ export interface Photo {
   category_id?: number | string | null;
   category_name?: string;
   category_slug?: string;
+  category_allow_downloads?: boolean;
   size: number;
   uploaded_at: string;
   captured_at?: string; // EXIF capture date (if available)
@@ -106,6 +107,7 @@ export interface PhotoCategory {
   slug: string;
   is_global: boolean;
   hero_photo_id?: number | null;
+  allow_downloads?: boolean;
 }
 
 export interface GalleryData {
