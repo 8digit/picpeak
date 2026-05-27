@@ -54,6 +54,7 @@ const MosaicPhoto: React.FC<MosaicPhotoProps> = ({
   const [savedIdentity, setSavedIdentity] = React.useState<{ name: string; email: string } | null>(null);
   const [likedLocal, setLikedLocal] = React.useState(false);
   const canComment = Boolean(feedbackEnabled && feedbackOptions?.allowComments && onQuickComment);
+  const effectiveAllowDownloads = allowDownloads && photo.category_allow_downloads !== false;
 
   // Calculate aspect ratio from photo dimensions (fallback to 1 if unknown)
   const aspectRatio = (photo.width && photo.height) ? photo.width / photo.height : 1;
@@ -77,7 +78,7 @@ const MosaicPhoto: React.FC<MosaicPhotoProps> = ({
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
           isGallery={true}
-          protectFromDownload={!allowDownloads}
+          protectFromDownload={!effectiveAllowDownloads}
         />
 
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
@@ -93,7 +94,7 @@ const MosaicPhoto: React.FC<MosaicPhotoProps> = ({
               >
                 <Maximize2 className="w-5 h-5 text-neutral-800" />
               </button>
-              {allowDownloads && (
+              {effectiveAllowDownloads && (
                 <button
                   className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
                   onClick={onDownload}
@@ -244,7 +245,7 @@ export const MosaicGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
           }}
           onDownload={(e) => onDownload(photo, e)}
           onToggleSelect={() => onPhotoSelect && onPhotoSelect(photo.id)}
-          allowDownloads={allowDownloads}
+          allowDownloads={allowDownloads && photo.category_allow_downloads !== false}
           slug={slug}
           feedbackEnabled={feedbackEnabled}
           feedbackOptions={feedbackOptions}

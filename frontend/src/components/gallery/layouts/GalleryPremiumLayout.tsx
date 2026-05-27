@@ -234,7 +234,7 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
       alt: photo.filename,
       width: photo.width || 1200,
       height: photo.height || 800,
-      download: allowDownloads ? photo.url : undefined
+      download: allowDownloads && photo.category_allow_downloads !== false ? photo.url : undefined
     }));
   }, [filteredPhotos, allowDownloads]);
 
@@ -316,7 +316,7 @@ export const GalleryPremiumLayout: React.FC<GalleryPremiumLayoutProps> = ({
     if (!allowDownloads || !slide.src) return;
 
     const photo = filteredPhotos.find(p => p.url === slide.src);
-    if (photo) {
+    if (photo && photo.category_allow_downloads !== false) {
       analyticsService.trackDownload(photo.id, slug, false);
       downloadPhotoMutation.mutate({
         slug,

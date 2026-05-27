@@ -54,6 +54,9 @@ const MasonryPhoto: React.FC<MasonryPhotoProps> = ({
   const [pendingAction, setPendingAction] = useState<null | { type: 'like'; photoId: number }>(null);
   const [savedIdentity, setSavedIdentity] = useState<{ name: string; email: string } | null>(null);
 
+  // Per-photo effective download permission (event flag AND category flag)
+  const effectiveAllowDownloads = allowDownloads && photo.category_allow_downloads !== false;
+
   // Calculate height based on actual photo aspect ratio
   // This preserves the photo's natural proportions in the masonry layout
   const imageHeight = useMemo(() => {
@@ -87,7 +90,7 @@ const MasonryPhoto: React.FC<MasonryPhotoProps> = ({
         className="w-full h-full object-cover rounded-lg"
         loading="lazy"
         isGallery={true}
-        protectFromDownload={!allowDownloads}
+        protectFromDownload={!effectiveAllowDownloads}
       />
       
       {/* Feedback Indicators */}
@@ -127,7 +130,7 @@ const MasonryPhoto: React.FC<MasonryPhotoProps> = ({
             >
               <Maximize2 className="w-5 h-5 text-neutral-800" />
             </button>
-            {allowDownloads && (
+            {effectiveAllowDownloads && (
               <button
                 className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
                 onClick={onDownload}
@@ -426,7 +429,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                 className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
                 loading="lazy"
                 isGallery={true}
-                protectFromDownload={!allowDownloads}
+                protectFromDownload={!allowDownloads || photo.category_allow_downloads === false}
               />
 
               {/* Feedback Indicators */}
@@ -465,7 +468,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                     >
                       <Maximize2 className="w-5 h-5 text-white" />
                     </button>
-                    {allowDownloads && (
+                    {allowDownloads && photo.category_allow_downloads !== false && (
                       <button
                         type="button"
                         aria-label="Download photo"
@@ -542,7 +545,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                 className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
                 loading="lazy"
                 isGallery={true}
-                protectFromDownload={!allowDownloads}
+                protectFromDownload={!allowDownloads || photo.category_allow_downloads === false}
               />
 
               {/* Feedback Indicators */}
@@ -581,7 +584,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                     >
                       <Maximize2 className="w-5 h-5 text-white" />
                     </button>
-                    {allowDownloads && (
+                    {allowDownloads && photo.category_allow_downloads !== false && (
                       <button
                         type="button"
                         aria-label="Download photo"
@@ -667,7 +670,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
                 isGallery={true}
-                protectFromDownload={!allowDownloads}
+                protectFromDownload={!allowDownloads || photo.category_allow_downloads === false}
               />
 
               {/* Feedback Indicators */}
@@ -706,7 +709,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                     >
                       <Maximize2 className="w-5 h-5 text-white" />
                     </button>
-                    {allowDownloads && (
+                    {allowDownloads && photo.category_allow_downloads !== false && (
                       <button
                         type="button"
                         aria-label="Download photo"
@@ -772,7 +775,7 @@ export const MasonryGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                 onClick={() => onPhotoClick(originalIndex)}
                 onDownload={(e) => onDownload(photo, e)}
                 onToggleSelect={() => onPhotoSelect && onPhotoSelect(photo.id)}
-                allowDownloads={allowDownloads}
+                allowDownloads={allowDownloads && photo.category_allow_downloads !== false}
                 feedbackEnabled={feedbackEnabled}
                 slug={slug}
                 feedbackOptions={feedbackOptions}

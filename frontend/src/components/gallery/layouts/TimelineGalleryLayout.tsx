@@ -109,7 +109,7 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                       className="w-full h-full object-cover rounded-lg"
                       loading="lazy"
                       isGallery={true}
-                      protectFromDownload={!allowDownloads}
+                      protectFromDownload={!allowDownloads || photo.category_allow_downloads === false}
                     />
                     
                     {/* Time label */}
@@ -130,7 +130,7 @@ export const TimelineGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
                           >
                             <Maximize2 className="w-5 h-5 text-neutral-800" />
                           </button>
-                          {allowDownloads && (
+                          {allowDownloads && photo.category_allow_downloads !== false && (
                             <button
                               className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
                               onClick={(e) => {

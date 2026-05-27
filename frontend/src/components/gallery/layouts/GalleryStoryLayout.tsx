@@ -335,7 +335,7 @@ export const GalleryStoryLayout: React.FC<GalleryStoryLayoutProps> = ({
                       onClick={() => handleOpenFeedback(photo)}
                       slug={slug}
                       galleryId={`gallery-${scene.id}`}
-                      allowDownloads={allowDownloads}
+                      allowDownloads={allowDownloads && photo.category_allow_downloads !== false}
                       protectionLevel={protectionLevel}
                       useEnhancedProtection={useEnhancedProtection}
                       useCanvasRendering={useCanvasRendering}

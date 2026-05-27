@@ -198,7 +198,7 @@ const GridPhoto: React.FC<GridPhotoProps> = ({
             photoId={photo.id}
             requiresToken={photo.requires_token}
             secureUrlTemplate={photo.secure_url_template}
-            protectFromDownload={!allowDownloads || useEnhancedProtection}
+            protectFromDownload={!allowDownloads || photo.category_allow_downloads === false || useEnhancedProtection}
             protectionLevel={protectionLevel}
             useEnhancedProtection={useEnhancedProtection}
             useCanvasRendering={useCanvasRendering || protectionLevel === 'maximum'}
@@ -226,7 +226,7 @@ const GridPhoto: React.FC<GridPhotoProps> = ({
                 >
                   <Maximize2 className="w-5 h-5 text-neutral-800" />
                 </button>
-                {allowDownloads && (
+                {allowDownloads && photo.category_allow_downloads !== false && (
                   <button
                     className="p-2 bg-white/90 rounded-full hover:bg-white transition-colors"
                     onClick={(e) => {
@@ -398,7 +398,7 @@ export const GridGalleryLayout: React.FC<BaseGalleryLayoutProps> = ({
           onToggleSelect={() => onPhotoSelect && onPhotoSelect(photo.id)}
           onDownload={(e) => onDownload(photo, e)}
           animationType={animation}
-          allowDownloads={allowDownloads}
+          allowDownloads={allowDownloads && photo.category_allow_downloads !== false}
           slug={slug}
           protectionLevel={protectionLevel}
           useEnhancedProtection={useEnhancedProtection}
