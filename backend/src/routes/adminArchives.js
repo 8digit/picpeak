@@ -6,7 +6,7 @@ const { formatBoolean } = require('../utils/dbCompat');
 const { adminAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permissions');
 const archiver = require('archiver');
-const AdmZip = require('adm-zip');
+const StreamZip = require('node-stream-zip');
 const router = express.Router();
 
 // Get all archived events
@@ -165,20 +165,24 @@ router.post('/:id/restore', adminAuth, requirePermission('archives.restore'), as
 
     // Extract the archive
     try {
-      const zip = new AdmZip(fullArchivePath);
+      // Stream-based extraction: handles archives larger than 2 GiB.
+      // (adm-zip buffered the whole file in memory and threw ERR_FS_FILE_TOO_LARGE
+      // on archives over Node's 2 GiB Buffer limit.)
+      const zip = new StreamZip.async({ file: fullArchivePath });
       const eventsDir = path.join(storagePath, 'events/active');
       const eventDir = path.join(eventsDir, archive.slug);
-      
+
       // Create event directory if it doesn't exist
       await fs.mkdir(eventDir, { recursive: true });
-      
+
       // Log ZIP contents for debugging
       console.log(`Extracting archive to: ${eventDir}`);
-      const entries = zip.getEntries();
+      const entries = Object.values(await zip.entries());
       console.log(`Archive contains ${entries.length} entries`);
-      
-      // Extract files to the event directory
-      zip.extractAllTo(eventDir, true);
+
+      // Extract files to the event directory (streams each entry, no full-file buffer)
+      await zip.extract(null, eventDir);
+      await zip.close();
       
       // Get list of extracted files to update database
       const extractedPhotos = [];
@@ -187,10 +191,10 @@ router.post('/:id/restore', adminAuth, requirePermission('archives.restore'), as
       const categoriesMap = new Map();
       
       for (const entry of entries) {
-        if (!entry.isDirectory && entry.entryName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          const filename = path.basename(entry.entryName);
-          const dirPath = path.dirname(entry.entryName);
-          const actualFilePath = path.join(eventDir, entry.entryName);
+        if (!entry.isDirectory && entry.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          const filename = path.basename(entry.name);
+          const dirPath = path.dirname(entry.name);
+          const actualFilePath = path.join(eventDir, entry.name);
           
           try {
             // Check if file was extracted successfully
@@ -251,7 +255,7 @@ router.post('/:id/restore', adminAuth, requirePermission('archives.restore'), as
             }
           } catch (statError) {
             console.error(`Failed to stat file: ${actualFilePath}`);
-            console.error(`Entry name was: ${entry.entryName}`);
+            console.error(`Entry name was: ${entry.name}`);
             console.error('Error:', statError.message);
             // Skip this file if we can't stat it
             continue;
