@@ -63,7 +63,7 @@ FailingStreak: 17897
 - `require('adm-zip')` → `MODULE_NOT_FOUND` (cleanly removed).
 
 ## Deploy
-Committed to `main` (commit `d91e99d`) → `docker-build.yml` rebuilds backend image → `deploy.yml` pulls + `up -d`.
+Committed to `main` (commit `69033c6`) → `docker-build.yml` rebuilds backend image → `deploy.yml` pulls + `up -d`.
 
 ## Post-deploy verification (fill in)
 - [ ] `docker inspect picpeak-backend` shows `healthy`.

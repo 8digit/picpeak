@@ -82,8 +82,8 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 8. **Editable client email** — can add/edit customer_email after event creation
 
 ### Recent Changes (2026-06-03)
-20. **Archive restore broke on archives >2 GiB** — Restoring an archived gallery showed "Something went wrong". `adm-zip` loads the whole ZIP into a Node Buffer, and the 2.44 GB "ZUHEILY" archive exceeded Node's 2 GiB Buffer limit (`ERR_FS_FILE_TOO_LARGE` at `adminArchives.js:168`). Replaced `adm-zip` with `node-stream-zip` (streaming extraction). NOT a read-only/disk issue — confirmed disk had 25 GB free. Commit `d91e99d`.
-21. **Backend healthcheck fixed (was `unhealthy` 6+ days)** — Production compose healthcheck used `curl`, which isn't installed in the Alpine backend image, so it never ran (FailingStreak 17897) even though the app was healthy. Switched to `wget --spider` (matches base compose, verified in container). Cosmetic only — deploys were never affected. Commit `d91e99d`.
+20. **Archive restore broke on archives >2 GiB** — Restoring an archived gallery showed "Something went wrong". `adm-zip` loads the whole ZIP into a Node Buffer, and the 2.44 GB "ZUHEILY" archive exceeded Node's 2 GiB Buffer limit (`ERR_FS_FILE_TOO_LARGE` at `adminArchives.js:168`). Replaced `adm-zip` with `node-stream-zip` (streaming extraction). NOT a read-only/disk issue — confirmed disk had 25 GB free. Commit `69033c6`.
+21. **Backend healthcheck fixed (was `unhealthy` 6+ days)** — Production compose healthcheck used `curl`, which isn't installed in the Alpine backend image, so it never ran (FailingStreak 17897) even though the app was healthy. Switched to `wget --spider` (matches base compose, verified in container). Cosmetic only — deploys were never affected. Commit `69033c6`.
 
 ### Recent Changes (2026-04-26)
 12. **Pivoted guest feedback CSV export** — export now outputs one row per (photo, guest) instead of one row per action. Columns: `filename`, `guest_name`, `guest_email`, `is_favorited`, `is_liked`, `star_rating`, `comment`. Hidden feedback excluded. Booleans as `yes`/`no`.
@@ -112,8 +112,8 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 | Guest feedback (likes/ratings) not registering in some templates | Resolved (2026-04-26) | Fixed: missing `require_name_email` in feedback-settings response + ASCII-only name regex + silent console.warn catch blocks. Commit c80e638. |
 | Draft mode preview shows black image boxes | Resolved (2026-04-27) | AuthenticatedImage wasn't forwarding ?preview=JWT to image fetches — verifyGalleryAccess blocked draft events. Fixed in AuthenticatedImage.tsx. Commit e1c8a35. |
 | Per-category downloads — all layouts ignored category flag | Resolved (2026-05-27) | Initial fix only applied to Grid layout; Masonry (and 5 other layouts) still used flat `allowDownloads`. All 7 layouts now check `photo.category_allow_downloads`. Commit 751ec75. |
-| Archive restore fails on archives >2 GiB | Resolved (2026-06-03) | `adm-zip` buffered whole ZIP → `ERR_FS_FILE_TOO_LARGE` over Node's 2 GiB limit. Replaced with `node-stream-zip` streaming. Commit `d91e99d`. |
-| Backend container shows `unhealthy` | Resolved (2026-06-03) | `curl` not in Alpine image → healthcheck never ran. Switched to `wget --spider`. App was always healthy; cosmetic. Commit `d91e99d`. |
+| Archive restore fails on archives >2 GiB | Resolved (2026-06-03) | `adm-zip` buffered whole ZIP → `ERR_FS_FILE_TOO_LARGE` over Node's 2 GiB limit. Replaced with `node-stream-zip` streaming. Commit `69033c6`. |
+| Backend container shows `unhealthy` | Resolved (2026-06-03) | `curl` not in Alpine image → healthcheck never ran. Switched to `wget --spider`. App was always healthy; cosmetic. Commit `69033c6`. |
 | Frontend restore error swallowed (generic toast) | Open (follow-up) | `ArchivesPage.tsx:87` onError shows `errors.somethingWentWrong` regardless of backend message, hiding the real cause. Consider surfacing the backend error. |
 
 ## Auth Architecture

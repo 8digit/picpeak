@@ -8,7 +8,7 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 ## 2026-06-03 — Archive Restore Fix (>2 GiB) + Backend Healthcheck Fix
 
 ### Bug Fixes
-- **Archive restore failed on archives larger than 2 GiB (commit d91e99d)**
+- **Archive restore failed on archives larger than 2 GiB (commit 69033c6)**
   - Symptom: restoring an archived gallery showed a generic "Something went wrong" toast. The "ZUHEILY BUSINESS TEAM" archive (2.44 GB) always failed; "Dra. Natalie Sanchez" (1.62 GB) worked.
   - Root cause: `adm-zip` reads the entire ZIP into a Node Buffer via `readFileSync`. Node's hard 2 GiB Buffer/file limit threw `RangeError [ERR_FS_FILE_TOO_LARGE]` at `adminArchives.js:168` (`new AdmZip(...)`) before any extraction.
   - NOT a read-only filesystem issue — droplet disk had 25 GB free and no `:ro` mounts. Confirmed via live `docker logs` stack trace (`adm-zip.js:60` → `readFileSync` → `tryCreateBuffer`).
@@ -16,7 +16,7 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
   - The frontend still swallows the backend error message and shows a generic toast (`ArchivesPage.tsx:87` onError) — noted as a separate follow-up, not changed this session.
 
 ### Infrastructure
-- **Backend container stuck `unhealthy` for 6+ days (commit d91e99d)**
+- **Backend container stuck `unhealthy` for 6+ days (commit 69033c6)**
   - Root cause: production healthcheck was `curl -f http://localhost:3000/health`, but `curl` is not installed in the Alpine backend image (Dockerfile installs only `dumb-init` + `postgresql-client`). The check could never run — `FailingStreak: 17897`, while the app itself was serving requests fine and `/health` returned 200.
   - Harmless (cosmetic): nothing depends on backend `service_healthy`; `deploy.yml` gates on its own host-level `curl` against published port 3001, so deploys were unaffected.
   - Fix: changed the backend healthcheck `test` to `wget --quiet --tries=1 --spider http://127.0.0.1:3000/health` — matching the already-correct base `docker-compose.yml`. Verified working in the live container (BusyBox v1.37.0 supports `--spider`, exit 0). Frontend/postgres/redis healthchecks untouched.
