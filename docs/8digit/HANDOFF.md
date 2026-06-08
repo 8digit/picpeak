@@ -1,7 +1,7 @@
 # PicPeak — 8digit Creative Handoff Document
 
 > If you're an AI assistant starting a new conversation on this project, read this first.
-> Last updated: 2026-06-03
+> Last updated: 2026-06-08
 
 ---
 
@@ -81,6 +81,10 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 7. **Draft gallery preview** — admin preview token for seeing gallery before publish
 8. **Editable client email** — can add/edit customer_email after event creation
 
+### Recent Changes (2026-06-08)
+22. **Restored gallery reload-loop on mobile (memory)** — Restored ZUHEILY (event 6) had `thumbnail_path = NULL` on all 1341 photos, so the grid served full-res (2561×3840, ~38 MB RAM each) → iOS Safari reloaded the tab on scroll → loop. Fixed operationally by regenerating thumbnails via `ensureThumbnail()` (1341/1341, 21 KB each). Not an app bug — browser memory-pressure reload.
+23. **`original_filename` lost on restore + manifest fix (commit `eb018aa`)** — Restore hardcoded `original_filename = filename` and the archive had no photos manifest, so restoring ZUHEILY overwrote the true camera names for all 1341. Recovered the 1179 Franco still had locally via SHA-256 content matching and patched the DB (297/303 of the client selection). Code fix: archive now writes `photos_manifest.json`; restore reads it (backward compatible) so future archive→restore is lossless.
+
 ### Recent Changes (2026-06-03)
 20. **Archive restore broke on archives >2 GiB** — Restoring an archived gallery showed "Something went wrong". `adm-zip` loads the whole ZIP into a Node Buffer, and the 2.44 GB "ZUHEILY" archive exceeded Node's 2 GiB Buffer limit (`ERR_FS_FILE_TOO_LARGE` at `adminArchives.js:168`). Replaced `adm-zip` with `node-stream-zip` (streaming extraction). NOT a read-only/disk issue — confirmed disk had 25 GB free. Commit `69033c6`.
 21. **Backend healthcheck fixed (was `unhealthy` 6+ days)** — Production compose healthcheck used `curl`, which isn't installed in the Alpine backend image, so it never ran (FailingStreak 17897) even though the app was healthy. Switched to `wget --spider` (matches base compose, verified in container). Cosmetic only — deploys were never affected. Commit `69033c6`.
@@ -115,6 +119,10 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 | Archive restore fails on archives >2 GiB | Resolved (2026-06-03) | `adm-zip` buffered whole ZIP → `ERR_FS_FILE_TOO_LARGE` over Node's 2 GiB limit. Replaced with `node-stream-zip` streaming. Commit `69033c6`. |
 | Backend container shows `unhealthy` | Resolved (2026-06-03) | `curl` not in Alpine image → healthcheck never ran. Switched to `wget --spider`. App was always healthy; cosmetic. Commit `69033c6`. |
 | Frontend restore error swallowed (generic toast) | Open (follow-up) | `ArchivesPage.tsx:87` onError shows `errors.somethingWentWrong` regardless of backend message, hiding the real cause. Consider surfacing the backend error. |
+| Restored gallery reload-loop (NULL thumbnails → full-res → iOS memory) | Resolved (2026-06-08) | Regenerated thumbnails for event 6 via `ensureThumbnail()`. Root prevention = restore should regen thumbnails; tracked with the manifest fix work. |
+| `original_filename` lost on restore | Resolved (2026-06-08) | Recovered event 6 by SHA-256 match to local originals (1179) + DB patch. Code fix `eb018aa` (archive manifest) prevents recurrence. Old archives w/o manifest still need manual hash recovery. |
+| Restore `path` format differs from uploads | Open (follow-up) | Restore stores `events/active/<slug>/<file>`; uploads store `<slug>/<file>`. Breaks built-in thumbnail regenerators on restored events. Normalize in a future pass. |
+| 6 retouched ZUHEILY photos still gallery-named | Open (low priority) | The 6 selected `edited-and-retouched`/`pre-edit-preview` not in Franco's originals folder. Recover later via retouched-folder hash or perceptual match. |
 
 ## Auth Architecture
 

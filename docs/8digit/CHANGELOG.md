@@ -5,6 +5,28 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-06-08 — Restored-Gallery Reload Loop + original_filename Recovery + Manifest Fix
+
+Continuation of the 2026-06-03 ZUHEILY restore. Two problems, both consequences of the restore being lossy. See handoff `2026-06-08-reload-loop-and-original-filename-recovery.md`.
+
+### Bug Fixes
+- **Client gallery stuck in a reload loop on mobile (restored ZUHEILY, event 6)**
+  - Cause: restore left `thumbnail_path = NULL` for all 1341 photos, so the grid fell back to full-res images (2561×3840, ~38 MB decoded RAM each). iOS Safari hit its per-tab memory ceiling on scroll → reloaded the tab → loop. Not an app-level reload (the only `window.location.reload()` calls are in upload handlers; the 401 interceptor explicitly avoids redirecting on `/gallery/` pages).
+  - Fix (operational, no deploy): regenerated 1341 thumbnails for event 6 via `ensureThumbnail()` (21 KB each, 0 errors). Grid now serves thumbnails; loop gone.
+- **`original_filename` lost on restore (commit `eb018aa`)**
+  - Cause: restore hardcoded `original_filename = filename` (gallery name), and the archive ZIP never stored a photos manifest — so restoring ZUHEILY overwrote the true camera filenames (`_5CI….jpg`) for all 1341. Broke feedback CSV + Lightroom-style export for the restored album. (Pre-existing restore behavior; surfaced when we restored the album.)
+  - Recovery (operational): matched gallery files to Franco's local originals by SHA-256 (byte-identical — upload doesn't re-encode). 1179/1179 matched; patched `photos.original_filename` for the 1179 in the DB (transactional, prior values backed up). 297/303 of the client's selection recovered; 6 retouched/preview versions remain as gallery names.
+  - Code fix: archive now writes `photos_manifest.json` into the ZIP; restore reads it to preserve `original_filename` (backward compatible — older archives fall back to the gallery name). Makes archive→restore lossless going forward.
+
+### Notes
+- Second latent restore bug found (not fixed this session): restore stores `path` as `events/active/<slug>/<file>` while uploads store `<slug>/<file>`, so the built-in thumbnail regenerators (`adminThumbnails /regenerate`, `scripts/regenerate-thumbnails.js`) fail on restored events. `ensureThumbnail`/`/photo` use the robust `resolvePhotoFilePath`, which is why regen via ensureThumbnail worked.
+
+### Files Changed
+- MOD: `backend/src/services/archiveService.js` (write `photos_manifest.json` into archive)
+- MOD: `backend/src/routes/adminArchives.js` (restore reads manifest for `original_filename`)
+
+---
+
 ## 2026-06-03 — Archive Restore Fix (>2 GiB) + Backend Healthcheck Fix
 
 ### Bug Fixes
