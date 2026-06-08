@@ -59,7 +59,29 @@ async function archiveEvent(event) {
         // Continue with archiving even if feedback export fails
       }
     }
-    
+
+    // Write a photos manifest into the archive so a future restore can recover per-photo
+    // metadata (original_filename, category) that can't be derived from the renamed gallery
+    // files. Without this, restore loses original_filename.
+    try {
+      const manifestPhotos = await db('photos')
+        .leftJoin('photo_categories', 'photos.category_id', 'photo_categories.id')
+        .where('photos.event_id', event.id)
+        .select(
+          'photos.filename',
+          'photos.original_filename',
+          'photos.type',
+          'photos.uploaded_at',
+          'photo_categories.name as category_name'
+        );
+      const manifestPath = path.join(eventPath, 'photos_manifest.json');
+      await fs.writeFile(manifestPath, JSON.stringify(manifestPhotos, null, 2), 'utf8');
+      logger.info(`Photos manifest written: ${manifestPhotos.length} entries`);
+    } catch (error) {
+      logger.error(`Error writing photos manifest for event ${event.slug}:`, error);
+      // Continue archiving even if manifest write fails
+    }
+
     output.on('close', async () => {
       logger.info(`Archive created: ${archiveName} (${archive.pointer()} bytes)`);
       
