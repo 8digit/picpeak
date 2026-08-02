@@ -39,9 +39,16 @@ jobs:
             # Restart with zero downtime (recreate only changed services)
             docker compose -f docker-compose.production.yml up -d --remove-orphans
 
-            # Wait for health checks
-            sleep 10
-
-            # Verify deployment
-            curl -sf http://localhost:3001/health || exit 1
-            echo "Deployment successful"
+            # Verify deployment — retry up to 5 min: on upgrades the backend
+            # runs pending migrations before it starts listening, which takes
+            # well over the old fixed 10s (the v3.45 upgrade ran ~60).
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:3001/health > /dev/null; then
+                echo "Deployment successful (healthy after ~$((i*10))s)"
+                exit 0
+              fi
+              sleep 10
+            done
+            echo "Backend not healthy after 5 min" >&2
+            docker logs --tail 50 picpeak-backend >&2 || true
+            exit 1
