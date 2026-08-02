@@ -5,6 +5,31 @@ Newest entries first. See `docs/8digit/handoffs/` for detailed session narrative
 
 ---
 
+## 2026-08-02 — Upgrade a upstream v3.45.11 (rama `upgrade/v3.45`)
+
+Re-base completo del fork sobre `upstream/stable` (v3.45.11). El fork estaba ~1,290 commits detrás, incluyendo ~77 fixes de seguridad (fuga de share tokens, lectura cross-gallery, acceso de invitados a fotos ocultas, SSRF, CSV injection, CVEs de dependencias). Ver handoff `2026-08-02-upgrade-v3.45-rebase.md`.
+
+### Contexto clave
+- El maintainer upstream (Paul Nothaft) portó la mayoría de nuestro trabajo custom a su repo con crédito explícito (su issue/PR #640 cita nuestros hashes): archives >2 GiB + original_filename manifest, permisos de descarga por categoría, ConfirmDialog, pivot del CSV de feedback. Draft mode + branding llegaron vía su PR #278.
+- Por eso la estrategia fue re-base (rama nueva desde `upstream/stable` + re-aplicar solo lo fork-specific) en vez de merge (50 archivos en conflicto).
+
+### Re-aplicado sobre v3.45 (commits nuevos en `upgrade/v3.45`)
+- **Infra CI/CD**: `deploy.yml` + `bootstrap-droplet.sh` (cherry-pick de 44db20a5); compose de producción apunta a `ghcr.io/8digit/picpeak/*:main` (el `docker-build.yml` upstream usa `github.repository`, así que publica al registry del fork sin cambios)
+- **Remember Me 30 días**: re-port de d062865b sobre el nuevo flujo MFA/TOTP; `rememberMe` fluye por `adminLogin` y `adminLoginMfa`, `completeAdminLogin` emite JWT 30d + cookie maxAge
+- **original_filename en export de feedback**: re-port de 430885c1; añadido a los shapes `long` y `pivot`
+- **Transporte email webhook n8n**: re-implementación de a1ef4856 sobre el pipeline nuevo (`sendTemplateEmail` + `sendRawEmail` + `mail_accounts`); `EMAIL_WEBHOOK_URL` sigue siendo el switch; attachments no viajan por webhook (warning, se envía el body)
+- **Migraciones legacy 074/075**: conservadas con header explicativo — producción las tiene registradas en `knex_migrations`; las equivalentes upstream (076/135) tienen guardas `hasColumn` y no-op donde ya corrieron
+- **docs/8digit/** restaurado; `.env.example` upstream conservado (documenta la config 3.x)
+
+### Pendiente de verificar en pruebas locales / producción
+- Theme colors/fonts en layouts Story/Premium (upstream refactorizó con `PhotoCard` compartido — puede estar resuelto)
+- Preview token de draft en fetches de imágenes (implementación upstream distinta)
+- Descargas ZIP en iOS Safari (upstream ahora pre-genera ZIPs con caché)
+- Branding de templates de email
+- ~60 migraciones nuevas corren al primer arranque (3.x añade CRM completo) — **backup de DB obligatorio antes de desplegar**
+
+---
+
 ## 2026-06-08 — Restored-Gallery Reload Loop + original_filename Recovery + Manifest Fix
 
 Continuation of the 2026-06-03 ZUHEILY restore. Two problems, both consequences of the restore being lossy. See handoff `2026-06-08-reload-loop-and-original-filename-recovery.md`.

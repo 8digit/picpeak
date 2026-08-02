@@ -1,7 +1,7 @@
 # PicPeak — 8digit Creative Handoff Document
 
 > If you're an AI assistant starting a new conversation on this project, read this first.
-> Last updated: 2026-06-08
+> Last updated: 2026-08-02
 
 ---
 
@@ -70,6 +70,17 @@ upstream  → github.com/the-luap/picpeak (original — pull updates)
 ## What We Changed (vs Upstream)
 
 Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
+
+> **⚠️ 2026-08-02 — UPGRADE EN CURSO (rama `upgrade/v3.45`, NO desplegada aún).**
+> El fork fue re-basado sobre `upstream/stable` v3.45.11 (~1,290 commits, ~77 fixes de
+> seguridad). El maintainer upstream portó la mayoría de nuestras customizaciones a su
+> repo (su PR #640 cita nuestros hashes; draft mode llegó vía su PR #278), así que en
+> v3.45 solo cargamos: infra CI/CD, transporte email n8n, Remember Me 30d,
+> original_filename en export de feedback, y docs. Los items 1, 7, 8, 12–19 de abajo
+> describen la rama vieja (`main` pre-upgrade) y ya viven upstream en alguna forma.
+> Pendiente antes de desplegar: prueba local con copia de DB + backup de DB de
+> producción (3.x corre ~60 migraciones nuevas al arrancar). Ver CHANGELOG 2026-08-02
+> y `handoffs/2026-08-02-upgrade-v3.45-rebase.md`.
 
 ### Core Customizations
 1. **Draft mode for events** — `is_draft` column, publish endpoint, public access blocked for drafts
