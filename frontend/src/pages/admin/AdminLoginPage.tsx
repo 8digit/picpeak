@@ -26,6 +26,7 @@ export const AdminLoginPage: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -110,7 +111,8 @@ export const AdminLoginPage: React.FC = () => {
     try {
       const response = await authService.adminLogin({
         ...formData,
-        recaptchaToken
+        recaptchaToken,
+        rememberMe
       });
       // MFA enabled → move to the second step instead of logging in.
       if (isMfaChallenge(response)) {
@@ -188,7 +190,7 @@ export const AdminLoginPage: React.FC = () => {
     setMfaError(null);
 
     try {
-      const response = await authService.adminLoginMfa({ mfaToken, code });
+      const response = await authService.adminLoginMfa({ mfaToken, code, rememberMe });
       login(response.token, response.user);
       toast.success(t('adminLogin.loginSuccess'));
       setLoginSuccess(true);
@@ -312,9 +314,11 @@ export const AdminLoginPage: React.FC = () => {
 
             {/* Remember Me */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-accent border-neutral-300 rounded focus:ring-primary-500"
                 />
                 <span className="ml-2 text-sm text-neutral-700">{t('adminLogin.rememberMe')}</span>

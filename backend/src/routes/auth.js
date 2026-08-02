@@ -50,6 +50,10 @@ async function completeAdminLogin(req, res, admin, ipAddress, userAgent, lockout
     last_login_ip: ipAddress
   });
 
+  // 8digit: "Remember Me" issues a 30-day JWT + matching cookie maxAge so the
+  // admin survives browser restarts; otherwise the 24h default applies. Read
+  // from req.body so both the direct path and the MFA-verify path honor it.
+  const rememberMe = Boolean(req.body && req.body.rememberMe);
   const token = jwt.sign({
     id: admin.id,
     username: admin.username,
@@ -58,11 +62,11 @@ async function completeAdminLogin(req, res, admin, ipAddress, userAgent, lockout
     ip: ipAddress,
     loginTime: Date.now()
   }, process.env.JWT_SECRET, {
-    expiresIn: '24h',
+    expiresIn: rememberMe ? '30d' : '24h',
     issuer: 'picpeak-auth'
   });
 
-  setAdminAuthCookie(res, token);
+  setAdminAuthCookie(res, token, { rememberMe });
 
   return res.json({
     user: {
@@ -81,7 +85,8 @@ async function completeAdminLogin(req, res, admin, ipAddress, userAgent, lockout
 // Admin login with enhanced security
 router.post('/admin/login', [
   body('username').notEmpty().trim(),
-  body('password').notEmpty()
+  body('password').notEmpty(),
+  body('rememberMe').optional().isBoolean().toBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -169,7 +174,8 @@ router.post('/admin/login', [
 // (from /admin/login) plus a TOTP or recovery code for a full admin session.
 router.post('/admin/login/mfa', [
   body('mfaToken').notEmpty(),
-  body('code').notEmpty().trim()
+  body('code').notEmpty().trim(),
+  body('rememberMe').optional().isBoolean().toBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

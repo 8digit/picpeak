@@ -14,13 +14,14 @@ const normalizeGalleryResponse = (response: GalleryAuthResponse): GalleryAuthRes
 
 export const authService = {
   // Admin authentication
-  async adminLogin(credentials: { email: string; password: string; recaptchaToken?: string | null }): Promise<AdminLoginResponse> {
+  async adminLogin(credentials: { email: string; password: string; recaptchaToken?: string | null; rememberMe?: boolean }): Promise<AdminLoginResponse> {
     // Backend expects 'username' field, but we accept email.
     // Returns either { user } (session set) or an MFA challenge { mfaRequired, mfaToken }.
     const response = await api.post<AdminLoginResponse>('/auth/admin/login', {
       username: credentials.email,
       password: credentials.password,
-      recaptchaToken: credentials.recaptchaToken
+      recaptchaToken: credentials.recaptchaToken,
+      rememberMe: credentials.rememberMe ?? false
     });
     return response.data;
   },
@@ -28,7 +29,7 @@ export const authService = {
   // Second step of the two-step admin login. `code` accepts a 6-digit TOTP
   // or a recovery code (e.g. "awzq-jca3-va"). On success the session cookie
   // is set server-side and the user object is returned.
-  async adminLoginMfa(payload: { mfaToken: string; code: string }): Promise<LoginResponse> {
+  async adminLoginMfa(payload: { mfaToken: string; code: string; rememberMe?: boolean }): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/auth/admin/login/mfa', payload);
     return response.data;
   },
