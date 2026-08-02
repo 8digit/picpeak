@@ -21,12 +21,26 @@ Re-base completo del fork sobre `upstream/stable` (v3.45.11). El fork estaba ~1,
 - **Migraciones legacy 074/075**: conservadas con header explicativo — producción las tiene registradas en `knex_migrations`; las equivalentes upstream (076/135) tienen guardas `hasColumn` y no-op donde ya corrieron
 - **docs/8digit/** restaurado; `.env.example` upstream conservado (documenta la config 3.x)
 
-### Pendiente de verificar en pruebas locales / producción
-- Theme colors/fonts en layouts Story/Premium (upstream refactorizó con `PhotoCard` compartido — puede estar resuelto)
-- Preview token de draft en fetches de imágenes (implementación upstream distinta)
-- Descargas ZIP en iOS Safari (upstream ahora pre-genera ZIPs con caché)
-- Branding de templates de email
-- ~60 migraciones nuevas corren al primer arranque (3.x añade CRM completo) — **backup de DB obligatorio antes de desplegar**
+### Deploy (mismo día)
+- Desplegado a producción vía CI/CD: build (multi-arch) y deploy exitosos; migraciones
+  corrieron al arrancar; API sirviendo branding desde la DB; frontend 200.
+- `deploy.yml` ahora toma un backup `pg_dumpall` gzip ANTES de cada deploy
+  (`/opt/picpeak/backups/pre-deploy-*.sql.gz`, conserva los últimos 10) y se restauró
+  el trigger `workflow_run` (el cherry-pick traía la versión vieja con trigger `push`).
+- El push requirió SSH (`git@github.com:8digit/picpeak.git`) — el token OAuth de git y
+  el de `gh` no tienen scope `workflow` y el diff toca `.github/workflows/`.
+- Merge a `main` con `-s ours` desde `upgrade/v3.45` para que el árbol final sea el del
+  upgrade pero la historia conecte con el main viejo (el `git pull` del droplet fue
+  fast-forward limpio).
+
+### Pendiente de verificación manual (Franco)
+- Login admin + Remember Me 30 días
+- Flujo draft → preview → publish (implementación upstream, distinta a la nuestra)
+- Theme colors/fonts en layouts Story/Premium (upstream refactorizó con `PhotoCard`)
+- Descargas per-category y download-all en iOS Safari (upstream pre-genera ZIPs)
+- Envío de email vía webhook n8n (probar con un evento de prueba)
+- Workflows upstream extra ahora corren en el fork (release-please, tests, schema-drift,
+  etc.) — inofensivos pero ruidosos; desactivar en una sesión futura si molestan
 
 ---
 

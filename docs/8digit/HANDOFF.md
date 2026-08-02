@@ -71,16 +71,19 @@ upstream  → github.com/the-luap/picpeak (original — pull updates)
 
 Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 
-> **⚠️ 2026-08-02 — UPGRADE EN CURSO (rama `upgrade/v3.45`, NO desplegada aún).**
+> **✅ 2026-08-02 — UPGRADE A v3.45.11 DESPLEGADO EN PRODUCCIÓN.**
 > El fork fue re-basado sobre `upstream/stable` v3.45.11 (~1,290 commits, ~77 fixes de
 > seguridad). El maintainer upstream portó la mayoría de nuestras customizaciones a su
 > repo (su PR #640 cita nuestros hashes; draft mode llegó vía su PR #278), así que en
 > v3.45 solo cargamos: infra CI/CD, transporte email n8n, Remember Me 30d,
 > original_filename en export de feedback, y docs. Los items 1, 7, 8, 12–19 de abajo
-> describen la rama vieja (`main` pre-upgrade) y ya viven upstream en alguna forma.
-> Pendiente antes de desplegar: prueba local con copia de DB + backup de DB de
-> producción (3.x corre ~60 migraciones nuevas al arrancar). Ver CHANGELOG 2026-08-02
-> y `handoffs/2026-08-02-upgrade-v3.45-rebase.md`.
+> describen la rama vieja (pre-upgrade) y ya viven upstream en alguna forma.
+> Deploy: build + deploy CI exitosos, migraciones corrieron, API sirviendo branding
+> desde la DB. El deploy ahora toma un backup `pg_dumpall` automático ANTES de cada
+> deploy (últimos 10 en `/opt/picpeak/backups/`). Pendiente de verificación manual por
+> Franco: login admin + Remember Me, draft preview, theme Story/Premium, descargas en
+> iPhone, envío de email vía n8n. Ver CHANGELOG 2026-08-02 y
+> `handoffs/2026-08-02-upgrade-v3.45-rebase.md`.
 
 ### Core Customizations
 1. **Draft mode for events** — `is_draft` column, publish endpoint, public access blocked for drafts
