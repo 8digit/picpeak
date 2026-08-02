@@ -135,3 +135,6 @@ new-layouts/
 
 # Generated CRM/accounting documents (runtime) — never commit
 backend/storage/business-docs/
+
+# 8digit: generated knowledge graph (graphify) — regenerable, not source
+graphify-out/

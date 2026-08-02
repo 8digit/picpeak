@@ -122,6 +122,7 @@ Forked from upstream v2.6.2. Full details in `docs/8digit/CHANGELOG.md`.
 
 | Issue | Status | Notes |
 |-------|--------|-------|
+| **Branding/white-label regresionado tras upgrade v3.45** | **Open — PRÓXIMA SESIÓN (grill)** | Franco reporta (2026-08-02): cambiaron las letras/fuentes, el brand y el logo tras el upgrade. Causa probable: la implementación white-label upstream difiere de la nuestra (fuentes/logo hardcodeados distintos, OG tags estáticos dicen "PicPeak", settings de branding nuevos en 3.x — `branding_login_logo_frame_enabled`, `branding_login_logo_size`, `logo_display_mode` — sin configurar, y nuestros commits d4251750/58ca5a37/db70b2f4 quedaron superseded por la versión upstream que no es idéntica). Plan: sesión de /grill-me para inventariar cada superficie (login, admin header, galería, hero, emails, OG) contra cómo se veía antes, y decidir por superficie si se resuelve por Settings→Branding o requiere re-port de código. |
 | Admin password resets on container restart | Open | Franco has had to reset multiple times. Root cause not yet investigated. |
 | `general_site_url` must be configured manually | Setup step | Settings > General — needed for share links and email links |
 | Branding must be configured manually | Setup step | Branding page — logo, company name, colors |
