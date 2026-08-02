@@ -23,7 +23,17 @@ Re-base completo del fork sobre `upstream/stable` (v3.45.11). El fork estaba ~1,
 
 ### Deploy (mismo día)
 - Desplegado a producción vía CI/CD: build (multi-arch) y deploy exitosos; migraciones
-  corrieron al arrancar; API sirviendo branding desde la DB; frontend 200.
+  corrieron al arrancar; dashboard confirmó v3.45.11; API sirviendo branding desde la DB.
+- **Gotcha 1 — canal de imágenes**: el primer deploy reinició con imágenes viejas. El
+  `.env` del droplet define `PICPEAK_CHANNEL=stable` y el tag `:stable` del registry del
+  fork quedó congelado en 2.6.5 (el workflow viejo etiquetaba builds de main como
+  `:stable`; el nuevo upstream reserva `:stable` para su rama stable). Fix: compose
+  fija `ghcr.io/8digit/picpeak/*:main` hardcodeado, sin variable de canal.
+- **Gotcha 2 — health gate**: el check del deploy esperaba 10s fijos y el backend tarda
+  más al correr migraciones → falso "failure" en un deploy que sí funcionó. Fix: retry
+  hasta 5 min + dump de logs del backend al agotar.
+- El banner "PicPeak's image registry has moved" que muestra el admin 3.x es aviso del
+  upstream para quienes pullean de SU registry — no nos aplica (pulleamos del nuestro).
 - `deploy.yml` ahora toma un backup `pg_dumpall` gzip ANTES de cada deploy
   (`/opt/picpeak/backups/pre-deploy-*.sql.gz`, conserva los últimos 10) y se restauró
   el trigger `workflow_run` (el cherry-pick traía la versión vieja con trigger `push`).
