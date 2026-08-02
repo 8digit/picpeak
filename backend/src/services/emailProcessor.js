@@ -21,6 +21,14 @@ function generateConfigHash(config) {
 // Initialize transporter from database config
 async function initializeTransporter(forceReinit = false) {
   try {
+    // 8digit: webhook mode (n8n) — DigitalOcean blocks SMTP ports, so when
+    // EMAIL_WEBHOOK_URL is set we never build (or verify) an SMTP transport.
+    // This also keeps the SMTP verify timeout from blocking server startup.
+    if (process.env.EMAIL_WEBHOOK_URL) {
+      logger.info('Email webhook mode active, skipping SMTP transporter');
+      return null;
+    }
+
     const config = await db('email_configs').first();
     
     if (!config) {
@@ -703,12 +711,32 @@ async function processTemplate(template, variables, language = 'en') {
 }
 
 // Send email using template
+// 8digit: send email via HTTP POST to an n8n webhook instead of SMTP.
+// Attachments can't ride along as JSON — callers that pass them (CRM
+// quote/invoice emails) get a warning and the body still goes out.
+async function sendViaWebhook(emailPayload) {
+  const webhookUrl = process.env.EMAIL_WEBHOOK_URL;
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(emailPayload)
+  });
+  if (!response.ok) {
+    throw new Error(`Webhook failed: ${response.status} ${response.statusText}`);
+  }
+  return await response.json().catch(() => ({}));
+}
+
 async function sendTemplateEmail(to, templateKey, variables) {
   try {
-    // Always check for configuration changes before sending
-    transporter = await initializeTransporter();
-    if (!transporter) {
-      throw new Error('Email service not configured');
+    const useWebhook = !!process.env.EMAIL_WEBHOOK_URL;
+
+    if (!useWebhook) {
+      // Always check for configuration changes before sending
+      transporter = await initializeTransporter();
+      if (!transporter) {
+        throw new Error('Email service not configured');
+      }
     }
 
     // Get email template
@@ -754,6 +782,22 @@ async function sendTemplateEmail(to, templateKey, variables) {
           }))
       : undefined;
 
+    if (useWebhook) {
+      if (attachments && attachments.length) {
+        logger.warn(`Webhook email to ${to} has ${attachments.length} attachment(s) that cannot be delivered via webhook — sending body only`);
+      }
+      const result = await sendViaWebhook({
+        from: `${config.from_name} <${config.from_email}>`,
+        to,
+        cc: ccList,
+        subject,
+        html: htmlBody,
+        text: textBody || htmlToText(htmlBody)
+      });
+      logger.info(`Email sent via webhook to ${to} (${language})`);
+      return { success: true, messageId: result.messageId || 'webhook', language, html: htmlBody };
+    }
+
     // Send email
     const info = await transporter.sendMail({
       from: `${config.from_name} <${config.from_email}>`,
@@ -785,6 +829,37 @@ async function sendRawEmail({ to, cc, subject, html, text, attachments, accountK
   let tx = null;
   let fromEmail = null;
   let fromName = null;
+
+  // 8digit: webhook mode — resolve the from-identity (per-account when given,
+  // global otherwise) and POST to n8n instead of SMTP.
+  if (process.env.EMAIL_WEBHOOK_URL) {
+    if (accountKey) {
+      const acct = await db('mail_accounts').where({ account_key: accountKey }).first();
+      if (acct && (acct.from_email || acct.smtp_user)) {
+        fromEmail = acct.from_email || acct.smtp_user;
+        fromName = acct.from_name || '';
+      }
+    }
+    if (!fromEmail) {
+      const config = await db('email_configs').first();
+      if (!config || !config.from_email) throw new Error('Email service not configured');
+      fromEmail = config.from_email;
+      fromName = config.from_name;
+    }
+    if (Array.isArray(attachments) && attachments.length) {
+      logger.warn(`Webhook email to ${to} has ${attachments.length} attachment(s) that cannot be delivered via webhook — sending body only`);
+    }
+    const result = await sendViaWebhook({
+      from: `${fromName || 'picpeak'} <${fromEmail}>`,
+      to,
+      cc: Array.isArray(cc) ? cc.filter(Boolean) : (cc ? [cc] : undefined),
+      subject,
+      html,
+      text: text || htmlToText(html)
+    });
+    logger.info(`Manual email sent via webhook to ${to}`);
+    return { messageId: result.messageId || 'webhook', html };
+  }
 
   // Prefer a per-account outgoing identity (e.g. hello@) when the mail account
   // has its own SMTP config, so customer replies send from that address instead
@@ -1107,6 +1182,11 @@ async function queueEmail(eventId, recipientEmail, emailType, emailData, options
 // Test email connection
 async function testEmailConnection() {
   try {
+    // 8digit: webhook mode has no SMTP to verify — report healthy so the
+    // admin Settings test button doesn't flag a false failure.
+    if (process.env.EMAIL_WEBHOOK_URL) {
+      return true;
+    }
     if (!transporter) {
       await initializeTransporter();
     }
