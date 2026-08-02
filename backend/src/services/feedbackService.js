@@ -444,6 +444,7 @@ class FeedbackService {
         .where('photo_feedback.event_id', eventId)
         .select(
           'photos.filename',
+          'photos.original_filename',
           'photo_feedback.feedback_type',
           'photo_feedback.rating',
           'photo_feedback.comment_text',
@@ -481,6 +482,7 @@ class FeedbackService {
         .where('photo_feedback.is_hidden', false)
         .select(
           'photos.filename',
+          'photos.original_filename',
           'photo_feedback.feedback_type',
           'photo_feedback.rating',
           'photo_feedback.comment_text',
@@ -503,6 +505,7 @@ class FeedbackService {
         if (!entry) {
           entry = {
             filename: row.filename,
+            original_filename: row.original_filename || '',
             guest_name: row.guest_name || '',
             guest_email: row.guest_email || '',
             is_favorited: false,
